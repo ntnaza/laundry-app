@@ -115,4 +115,41 @@ class TransactionController extends Controller
 
         return redirect()->back()->with('success', 'Status cucian berhasil diperbarui!');
     }
+
+    public function printThermal(Transaction $transaction)
+    {
+        // Ambil data setting toko buat header struk
+        $setting = \App\Models\Setting::first();
+        return view('admin.transactions.print_thermal', compact('transaction', 'setting'));
+    }
+
+    public function edit($id)
+    {
+        // Ambil data transaksi
+        $transaction = Transaction::findOrFail($id);
+        
+        // Tampilkan halaman form edit (Timbang & Harga)
+        return view('admin.transactions.edit', compact('transaction'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'total_price' => 'required|numeric',
+            'status' => 'required',
+            'delivery_status' => 'required' // Admin juga bisa update status kurir
+        ]);
+
+        $transaction = Transaction::findOrFail($id);
+
+        // Update Data
+        $transaction->update([
+            'total_price' => $request->total_price,
+            'status' => $request->status,
+            'delivery_status' => $request->delivery_status,
+            'user_id' => auth()->id() // Admin yang login otomatis jadi penanggung jawab (Kasir)
+        ]);
+
+        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil diperbarui!');
+    }
 }

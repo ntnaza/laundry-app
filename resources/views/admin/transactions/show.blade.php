@@ -1,3 +1,7 @@
+@php
+    $setting = \App\Models\Setting::first();
+@endphp
+
 @extends('layouts.admin')
 
 @section('title', 'Detail Transaksi')
@@ -38,7 +42,9 @@
             <a href="https://wa.me/{{ $transaction->customer->phone }}?text=Halo Kak {{ $transaction->customer->name }},%0A%0ATerima kasih sudah laundry di LaundryKuy.%0AInvoice: {{ $transaction->invoice_code }}%0ATotal: Rp {{ number_format($transaction->total_price) }}%0AStatus: {{ strtoupper($transaction->status) }}%0A%0ACek status cucianmu disini:%0A{{ route('track') }}" target="_blank" class="btn btn-success me-2">
         <i class="bi bi-whatsapp"></i> Kirim WA
     </a>
-            <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Cetak Struk</button>
+            <a href="{{ route('transactions.printThermal', $transaction->id) }}" target="_blank" class="btn btn-secondary me-2">
+    <i class="bi bi-printer"></i> Struk Thermal
+</a>
         </div>
 
 
@@ -85,11 +91,19 @@
             <div class="card-body p-5">
                 
                 <div class="text-center mb-5">
-                    <h2 class="text-primary fw-bold" style="letter-spacing: 2px;">LAUNDRY<span class="text-dark">KUY</span></h2>
-                    <p class="text-muted">Jl. Koding Bersama No. 99, Bandung<br>
-                    WhatsApp: 0812-3456-7890</p>
-                    <hr>
-                </div>
+    
+    @if($setting->logo)
+        <img src="{{ asset('storage/'.$setting->logo) }}" alt="Logo" style="width: 80px; margin-bottom: 10px;">
+    @endif
+
+    <h2 class="text-primary fw-bold" style="letter-spacing: 2px;">{{ strtoupper($setting->shop_name) }}</h2>
+    
+    <p class="text-muted">
+        {{ $setting->address }}<br>
+        WhatsApp: {{ $setting->phone }}
+    </p>
+    <hr>
+</div>
 
                 <div class="row mb-4">
                     <div class="col-6">

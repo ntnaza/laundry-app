@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use App\Exports\TransactionExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -25,5 +27,9 @@ class ReportController extends Controller
         $totalOmzet = $transactions->sum('total_price');
 
         return view('admin.reports.index', compact('transactions', 'totalOmzet', 'startDate', 'endDate'));
+    }
+    public function exportExcel()
+    {
+    return Excel::download(new TransactionExport, 'laporan-transaksi.xlsx');
     }
 }

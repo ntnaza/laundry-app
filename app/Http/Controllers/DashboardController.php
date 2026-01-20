@@ -3,28 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
-use App\Models\Expense;
 use App\Models\Customer;
-use App\Models\TransactionDetail; // Buat hitung total baju
+use App\Models\User;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Hitung Pemasukan (Status harus 'paid' biar valid)
-        $pemasukan = Transaction::where('payment_status', 'paid')->sum('total_price');
+        // 1. DATA KARTU ATAS (Ringkasan)
+        $totalTransactions = Transaction::count();
+        $totalCustomers = Customer::count();
+        $totalIncome = Transaction::where('payment_status', 'paid')->sum('total_price');
+        $todayIncome = Transaction::where('payment_status', 'paid')
+                        ->whereDate('created_at', Carbon::today())
+                        ->sum('total_price');
 
-        // 2. Hitung Pengeluaran
-        $pengeluaran = Expense::sum('amount');
+        // 2. DATA GRAFIK (Pendapatan 7 Hari Terakhir)
+        // Kita loop 7 hari ke belakang
+        $chartData = [];
+        $chartCategories = [];
 
-        // 3. Hitung Profit
-        $profit = $pemasukan - $pengeluaran;
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            
+            // Hitung omset di tanggal tersebut
+            $income = Transaction::where('payment_status', 'paid')
+                        ->whereDate('created_at', $date)
+                        ->sum('total_price');
+            
+            $chartCategories[] = $date->format('d M'); // Label (Tgl)
+            $chartData[] = $income; // Data (Duit)
+        }
 
-        // 4. Data Pendukung Lain
-        $total_transaksi = Transaction::count();
-        $total_customer = Customer::count();
+        // 3. TRANSAKSI TERBARU (5 Biji) buat tabel mini
+        $latestTransactions = Transaction::with('customer')->latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('pemasukan', 'pengeluaran', 'profit', 'total_transaksi', 'total_customer'));
+        return view('admin.dashboard', compact(
+            'totalTransactions', 
+            'totalCustomers', 
+            'totalIncome', 
+            'todayIncome',
+            'chartData',
+            'chartCategories',
+            'latestTransactions'
+        ));
     }
 }

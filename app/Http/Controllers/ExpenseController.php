@@ -4,19 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini biar aman
 
 class ExpenseController extends Controller
 {
     public function index()
     {
+        // Kita balikin 'with(user)' biar nama pelapornya muncul lagi di tabel
         $expenses = Expense::with('user')->latest()->get();
         return view('admin.expenses.index', compact('expenses'));
-    }
-
-    public function create()
-    {
-        return view('admin.expenses.create');
     }
 
     public function store(Request $request)
@@ -27,13 +23,13 @@ class ExpenseController extends Controller
             'date' => 'required|date',
         ]);
 
-        Expense::create([
-            'description' => $request->description,
-            'amount' => $request->amount,
-            'date' => $request->date,
-            'note' => $request->note,
-            'user_id' => Auth::id() ?? 1 // Fallback ke admin kalau belum login
-        ]);
+        // AMBIL SEMUA INPUTAN
+        $data = $request->all();
+        
+        // TAMBAHKAN ID USER YANG SEDANG LOGIN (Wajib diisi biar gak error 1364)
+        $data['user_id'] = Auth::id(); 
+
+        Expense::create($data);
 
         return redirect()->route('expenses.index')->with('success', 'Pengeluaran berhasil dicatat!');
     }

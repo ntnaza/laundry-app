@@ -10,8 +10,18 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        
+        // DAFTAR MIDDLEWARE KITA DISINI
+        $middleware->alias([
+            // Middleware Role (yang sudah ada sebelumnya)
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+
+            // TAMBAHAN PENTING:
+            // Ganti logika 'guest' bawaan dengan file buatan kita tadi
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        ]);
+        
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
