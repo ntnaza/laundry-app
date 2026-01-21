@@ -27,41 +27,69 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'phone' => 'required', // Validasi No HP
-            'pickup_address' => 'required|string|max:255',
+            'phone' => 'required',
+            'pickup_address' => 'required',
             'delivery_type' => 'required',
+            // Pastikan lat long boleh ada (string/numeric)
+            'latitude' => 'nullable', 
+            'longitude' => 'nullable',
         ]);
 
-        // --- LOGIKA BARU: AUTO CREATE CUSTOMER ---
-        // Cari apakah User ini sudah terdaftar sebagai Customer (berdasarkan Nama)?
-        // (Idealnya pakai user_id, tapi karena struktur DB lama belum ada user_id di tabel customers, kita pakai Nama dulu sebagai penghubung)
-        
+        // ... (Kode customer firstOrCreate tetap sama) ...
         $customer = \App\Models\Customer::firstOrCreate(
-            ['name' => Auth::user()->name], // Cari berdasarkan Nama User yg login
-            [
-                // Kalau belum ada, isi data baru ini:
-                'phone' => $request->phone,
-                'address' => $request->pickup_address
-            ]
+            ['name' => Auth::user()->name],
+            ['phone' => $request->phone, 'address' => $request->pickup_address]
         );
-        // -----------------------------------------
 
-        // Bikin Kode Invoice Unik
+        // ... (Kode hitung harga tetap sama) ...
+        $pricePerKg = 7000;
+        $estimatedTotal = $request->weight ? $request->weight * $pricePerKg : 0;
+
         $invoice = 'TRX-' . mt_rand(10000, 99999);
 
         Transaction::create([
             'invoice_code' => $invoice,
-            'customer_id' => $customer->id, // <--- PAKAI ID DARI TABEL CUSTOMER (BUKAN AUTH ID)
-            'user_id' => null, // Kasir kosong dulu
-            'total_price' => 0,
+            'customer_id' => $customer->id,
+            'user_id' => null,
+            'total_price' => $estimatedTotal,
             'status' => 'pending',
             'payment_status' => 'unpaid',
+            
             'pickup_address' => $request->pickup_address,
+            
+            // --- SIMPAN KOORDINAT DISINI ---
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            // -------------------------------
+
             'delivery_type' => $request->delivery_type,
             'delivery_status' => 'pending',
-            'note' => $request->note
+            'note' => $request->note . " (Estimasi Berat: " . ($request->weight ?? 0) . " kg)"
         ]);
 
-        return redirect()->route('customer.dashboard')->with('success', 'Kurir sedang dipanggil! Mohon tunggu.');
+        return redirect()->route('customer.dashboard')->with('success', 'Order masuk! Lokasi sudah tercatat.');
+    }
+
+    public function uploadProof(Request $request, $id)
+    {
+        $request->validate([
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+        ]);
+
+        $transaction = Transaction::where('customer_id', Auth::id())->findOrFail($id);
+
+        // Upload File ke folder 'public/payment_proofs'
+        if ($request->hasFile('payment_proof')) {
+            $file = $request->file('payment_proof');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('payment_proofs', $filename, 'public');
+
+            // Simpan path ke database
+            $transaction->update([
+                'payment_proof' => $path
+            ]);
+        }
+
+        return back()->with('success', 'Bukti pembayaran berhasil dikirim! Tunggu verifikasi admin.');
     }
 }

@@ -51,4 +51,18 @@ class DashboardController extends Controller
             'latestTransactions'
         ));
     }
+    // Fungsi buat dipanggil sama JavaScript (AJAX)
+    public function checkNewOrders()
+    {
+        // Hitung orderan yang butuh kurir (delivery_status = pending)
+        // Dan status transaksinya masih pending (belum diproses)
+        $newOrders = \App\Models\Transaction::where('delivery_type', '!=', 'none')
+                        ->where('delivery_status', 'pending')
+                        ->where('status', 'pending')
+                        ->count();
+
+        return response()->json([
+            'new_orders' => $newOrders
+        ]);
+    }
 }

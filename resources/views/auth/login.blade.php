@@ -8,76 +8,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - {{ $setting->shop_name ?? 'Laundry System' }}</title>
+    <title>Masuk - {{ $setting->shop_name ?? 'Laundry System' }}</title>
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/compiled/css/auth.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563EB;     
+            --primary-dark: #1e40af;
+            --dark: #0F172A;        
+            --light: #F8FAFC;       
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--dark); }
+
+        /* Kiri: Form Area */
+        .auth-left {
+            padding: 50px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+        }
+
+        /* --- THE ABSOLUTE FIX: FLEXBOX ARCHITECTURE --- */
+        
+        /* 1. Container Luar (Kapsul) */
+        .input-group-premium {
+            display: flex;              
+            align-items: center;        /* Kunci Vertikal Center */
+            background-color: #f1f5f9;
+            border: 1px solid transparent;
+            border-radius: 50px;
+            height: 54px;               /* Tinggi Genap (Lebih mudah dibagi 2) */
+            padding: 0 5px;             /* Padding dikit biar gak mepet border */
+            width: 100%;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .input-group-premium:focus-within {
+            background-color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        /* 2. Container Ikon (Kotak Persegi di Kiri) */
+        .input-icon-wrapper {
+            width: 45px;            /* Lebar fix */
+            height: 100%;           /* Tinggi full ngikutin parent (54px) */
+            display: flex;          
+            align-items: center;    /* Center Y */
+            justify-content: center;/* Center X */
+            color: #94a3b8;
+            font-size: 1.2rem;
+            flex-shrink: 0;         /* Jangan sampe kegencet */
+        }
+
+        /* 3. Reset Ikon Bootstrap biar gak punya opinion sendiri */
+        .input-icon-wrapper i, 
+        .input-icon-wrapper .bi {
+            line-height: 1 !important;
+            vertical-align: middle !important;
+            display: flex !important; 
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 4. Input Field (Reset Total) */
+        .input-field {
+            flex: 1;                /* Ambil sisa ruang */
+            background: transparent;
+            border: none;
+            height: 100%;           /* Full tinggi parent */
+            color: var(--dark);
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            
+            /* RESET PADDING BAWAAN BROWSER */
+            padding: 0 15px 0 0;    
+            margin: 0;
+            
+            /* BIAR TEKS DI TENGAH SECARA ALAMI */
+            line-height: normal; 
+        }
+        
+        /* Reset Autofill Chrome */
+        .input-field:-webkit-autofill,
+        .input-field:-webkit-autofill:hover, 
+        .input-field:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #f1f5f9 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        .input-group-premium:focus-within .input-field:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+        }
+
+        /* Tombol Login */
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            height: 54px; 
+            border-radius: 50px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+            width: 100%;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
+            color: white;
+        }
+
+        /* Kanan: Image Area */
+        .auth-right {
+            background: url('https://images.unsplash.com/photo-1582735689369-4fe89db7114c?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            height: 100%;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.9));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 60px;
+            color: white;
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            background: #f8fafc;
+            padding: 8px 20px;
+            border-radius: 30px;
+        }
+        .btn-back:hover { color: var(--primary); background: #eff6ff; }
+        
+        /* Fix icon back */
+        .btn-back i { display: flex; align-items: center; line-height: 0; }
+
+        @media (max-width: 991px) {
+            .auth-left { padding: 40px; }
+            .auth-right { display: none; }
+        }
+    </style>
 </head>
 
 <body>
-    <script src="{{ asset('assets/static/js/initTheme.js') }}"></script>
-    <div id="auth">
-        <div class="row h-100">
+    <div class="container-fluid h-100 p-0">
+        <div class="row h-100 g-0">
+            
             <div class="col-lg-5 col-12">
-                <div id="auth-left">
-                    <div class="auth-logo mb-4">
-                        <a href="{{ url('/') }}" class="d-flex align-items-center gap-2 text-decoration-none">
-                            @if($setting && $setting->logo)
-                                <img src="{{ asset('storage/'.$setting->logo) }}" alt="Logo" style="height: 50px;">
-                            @endif
-                            <h3 class="m-0 text-primary">{{ $setting->shop_name ?? 'LaundryKuy' }}</h3>
-                        </a>
+                <div class="auth-left">
+                    <a href="{{ url('/') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+
+                    <div class="mb-5 mt-4">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                <i class="bi bi-basket-fill fs-5" style="display: flex; align-items: center; justify-content: center;"></i>
+                            </div>
+                            <h3 class="m-0 text-primary fw-bold">{{ $setting->shop_name ?? 'LaundryKuy' }}</h3>
+                        </div>
+                        <h1 class="mb-2">Selamat Datang Kembali!</h1>
+                        <p class="text-muted">Masukan kredensial akun Anda untuk mengakses dashboard.</p>
                     </div>
-                    
-                    <h1 class="auth-title">Log in.</h1>
-                    <p class="auth-subtitle mb-5">Masuk dengan data akun yang diberikan admin.</p>
 
                     <form action="{{ route('login') }}" method="POST">
                         @csrf
                         
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="email" name="email" class="form-control form-control-xl @error('email') is-invalid @enderror" placeholder="Email" value="{{ old('email') }}" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-person"></i>
+                        <div class="mb-4">
+                            <div class="input-group-premium @error('email') border border-danger @enderror">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <input type="email" name="email" class="input-field" placeholder="Alamat Email" value="{{ old('email') }}" required>
                             </div>
                             @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <small class="text-danger ps-3 mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="password" name="password" class="form-control form-control-xl" placeholder="Password" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-shield-lock"></i>
+                        <div class="mb-4">
+                            <div class="input-group-premium">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-lock"></i>
+                                </div>
+                                <input type="password" name="password" class="input-field" placeholder="Kata Sandi" required>
                             </div>
                         </div>
 
-                        <div class="form-check form-check-lg d-flex align-items-end">
-                            <input class="form-check-input me-2" type="checkbox" name="remember" id="flexCheckDefault">
-                            <label class="form-check-label text-gray-600" for="flexCheckDefault">
-                                Ingat Saya
-                            </label>
+                        <div class="d-flex justify-content-between align-items-center mb-5">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remember" id="flexCheckDefault">
+                                <label class="form-check-label text-muted small" for="flexCheckDefault">
+                                    Ingat Saya
+                                </label>
+                            </div>
+                            @if (Route::has('password.request'))
+                                <a href="{{ route('password.request') }}" class="text-primary small fw-bold text-decoration-none">Lupa Password?</a>
+                            @endif
                         </div>
-                        
-                        <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5">Masuk Aplikasi</button>
+
+                        <button class="btn-login">MASUK SEKARANG <i class="bi bi-arrow-right"></i></button>
                     </form>
-                    
-                    <div class="text-center mt-5 text-lg fs-4">
-                        <p class="text-gray-600">Pelanggan mau cek cucian? <a href="{{ url('/') }}" class="font-bold">Klik Disini</a>.</p>
+
+                    <div class="text-center mt-5">
+                        <p class="text-muted small">Belum punya akun? <a href="{{ route('register') }}" class="text-primary fw-bold text-decoration-none">Daftar Member</a></p>
                     </div>
                 </div>
             </div>
             
             <div class="col-lg-7 d-none d-lg-block">
-                <div id="auth-right" style="background: #435ebe; display: flex; align-items: center; justify-content: center;">
-                   <div class="text-white text-center p-5">
-                       <h2 class="text-white mb-4">Sistem Manajemen Laundry</h2>
-                       <p class="lead">Kelola transaksi, pelanggan, dan laporan keuangan dalam satu pintu.</p>
-                       <i class="bi bi-basket-fill" style="font-size: 10rem; opacity: 0.5;"></i>
-                   </div>
+                <div class="auth-right">
+                    <div class="overlay">
+                        <div class="mb-4">
+                            <div class="d-flex gap-1 text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <h2 class="text-white mb-3">"Kualitas Laundry Terbaik!"</h2>
+                            <p class="text-white-50 fs-5">"Sistem ini sangat membantu saya memantau cucian tanpa harus bolak-balik ke outlet. Notifikasinya juga realtime banget!"</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="https://i.pravatar.cc/150?img=32" class="rounded-circle border border-2 border-white" width="50" alt="User">
+                            <div>
+                                <h6 class="text-white mb-0 fw-bold">Jessica Mila</h6>
+                                <small class="text-white-50">Pelanggan Setia</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 </body>

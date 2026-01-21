@@ -1,87 +1,283 @@
+@php
+    $setting = \App\Models\Setting::first();
+@endphp
+
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Akun - LaundryKuy</title>
+    <title>Daftar - {{ $setting->shop_name ?? 'Laundry System' }}</title>
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/compiled/css/auth.css') }}">
-    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/favicon.svg') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563EB;     
+            --primary-dark: #1e40af;
+            --dark: #0F172A;        
+            --light: #F8FAFC;       
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--dark); }
+
+        /* Kiri: Form Area */
+        .auth-left {
+            padding: 40px 80px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+            overflow-y: auto; 
+        }
+
+        /* --- THE ABSOLUTE FIX: FLEXBOX ARCHITECTURE (ANTI-DENGDEK) --- */
+        
+        .input-group-premium {
+            display: flex;              
+            align-items: center;        
+            background-color: #f1f5f9;
+            border: 1px solid transparent;
+            border-radius: 50px;
+            height: 54px;               
+            padding: 0 5px;             
+            width: 100%;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .input-group-premium:focus-within {
+            background-color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-icon-wrapper {
+            width: 45px;            
+            height: 100%;           
+            display: flex;          
+            align-items: center;    
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            flex-shrink: 0;         
+        }
+
+        .input-icon-wrapper i, 
+        .input-icon-wrapper .bi {
+            line-height: 1 !important;
+            vertical-align: middle !important;
+            display: flex !important; 
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .input-field {
+            flex: 1;                
+            background: transparent;
+            border: none;
+            height: 100%;           
+            color: var(--dark);
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            padding: 0 15px 0 0;    
+            margin: 0;
+            line-height: normal; 
+        }
+        
+        .input-field:-webkit-autofill,
+        .input-field:-webkit-autofill:hover, 
+        .input-field:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #f1f5f9 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        .input-group-premium:focus-within .input-field:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+        }
+
+        /* Tombol Daftar */
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            height: 54px; 
+            border-radius: 50px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+            width: 100%;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
+            color: white;
+        }
+
+        /* Kanan: Image Area (GAMBAR BARU YANG LEBIH STABIL) */
+        .auth-right {
+            /* Gambar: Clean Aesthetic Laundry Room */
+            background: url('https://images.unsplash.com/photo-1567113463300-102a7eb3cb26?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            height: 100%;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.9));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 60px;
+            color: white;
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            background: #f8fafc;
+            padding: 8px 20px;
+            border-radius: 30px;
+            z-index: 10;
+        }
+        .btn-back:hover { color: var(--primary); background: #eff6ff; }
+        
+        .btn-back i { display: flex; align-items: center; line-height: 0; }
+
+        @media (max-width: 991px) {
+            .auth-left { padding: 40px; overflow-y: auto; }
+            .auth-right { display: none; }
+        }
+    </style>
 </head>
 
 <body>
-    <script src="{{ asset('assets/static/js/initTheme.js') }}"></script>
-    <div id="auth">
-        
-        <div class="row h-100">
+    <div class="container-fluid h-100 p-0">
+        <div class="row h-100 g-0">
+            
             <div class="col-lg-5 col-12">
-                <div id="auth-left">
-                    <div class="auth-logo">
-                        <a href="{{ url('/') }}" class="fs-2 fw-bold text-primary">
-                            <i class="bi bi-basket-fill"></i> LaundryKuy
-                        </a>
+                <div class="auth-left">
+                    <a href="{{ url('/') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+
+                    <div class="mb-4 mt-5 pt-3">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                <i class="bi bi-basket-fill fs-5" style="display: flex; align-items: center; justify-content: center;"></i>
+                            </div>
+                            <h3 class="m-0 text-primary fw-bold">{{ $setting->shop_name ?? 'LaundryKuy' }}</h3>
+                        </div>
+                        <h1 class="mb-2">Buat Akun Baru</h1>
+                        <p class="text-muted">Bergabunglah dan nikmati kemudahan laundry antar-jemput.</p>
                     </div>
-                    <h1 class="auth-title">Daftar.</h1>
-                    <p class="auth-subtitle mb-5">Bergabunglah untuk menikmati layanan antar-jemput laundry.</p>
 
                     <form action="{{ route('register') }}" method="POST">
                         @csrf
                         
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="text" name="name" class="form-control form-control-xl @error('name') is-invalid @enderror" placeholder="Nama Lengkap" value="{{ old('name') }}" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-person"></i>
+                        <div class="mb-3">
+                            <div class="input-group-premium @error('name') border border-danger @enderror">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <input type="text" name="name" class="input-field" placeholder="Nama Lengkap" value="{{ old('name') }}" required>
                             </div>
                             @error('name')
-                                <small class="text-danger">{{ $message }}</small>
+                                <small class="text-danger ps-3 mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="email" name="email" class="form-control form-control-xl @error('email') is-invalid @enderror" placeholder="Email" value="{{ old('email') }}" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-envelope"></i>
+                        <div class="mb-3">
+                            <div class="input-group-premium @error('email') border border-danger @enderror">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <input type="email" name="email" class="input-field" placeholder="Alamat Email" value="{{ old('email') }}" required>
                             </div>
                             @error('email')
-                                <small class="text-danger">{{ $message }}</small>
+                                <small class="text-danger ps-3 mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="password" name="password" class="form-control form-control-xl @error('password') is-invalid @enderror" placeholder="Password" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-shield-lock"></i>
+                        <div class="mb-3">
+                            <div class="input-group-premium @error('password') border border-danger @enderror">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-lock"></i>
+                                </div>
+                                <input type="password" name="password" class="input-field" placeholder="Buat Kata Sandi" required>
                             </div>
                             @error('password')
-                                <small class="text-danger">{{ $message }}</small>
+                                <small class="text-danger ps-3 mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
-                        <div class="form-group position-relative has-icon-left mb-4">
-                            <input type="password" name="password_confirmation" class="form-control form-control-xl" placeholder="Ulangi Password" required>
-                            <div class="form-control-icon">
-                                <i class="bi bi-shield-lock-fill"></i>
+                        <div class="mb-4">
+                            <div class="input-group-premium">
+                                <div class="input-icon-wrapper">
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+                                <input type="password" name="password_confirmation" class="input-field" placeholder="Ulangi Kata Sandi" required>
                             </div>
                         </div>
 
-                        <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5">Buat Akun</button>
+                        <button class="btn-register">DAFTAR SEKARANG <i class="bi bi-arrow-right"></i></button>
                     </form>
 
-                    <div class="text-center mt-5 text-lg fs-4">
-                        <p class='text-gray-600'>Sudah punya akun? <a href="{{ route('login') }}" class="font-bold">Masuk disini</a>.</p>
+                    <div class="text-center mt-4 mb-4">
+                        <p class="text-muted small">Sudah punya akun? <a href="{{ route('login') }}" class="text-primary fw-bold text-decoration-none">Masuk Disini</a></p>
                     </div>
                 </div>
             </div>
+            
             <div class="col-lg-7 d-none d-lg-block">
-                <div id="auth-right">
+                <div class="auth-right">
+                    <div class="overlay">
+                        <div class="mb-4">
+                            <div class="d-flex gap-1 text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <h2 class="text-white mb-3">"Solusi Cerdas Laundry!"</h2>
+                            <p class="text-white-50 fs-5">"Saya tidak perlu lagi repot antri atau nunggu lama. Tinggal klik, kurir datang, cucian beres. Sangat direkomendasikan!"</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="https://i.pravatar.cc/150?img=12" class="rounded-circle border border-2 border-white" width="50" alt="User">
+                            <div>
+                                <h6 class="text-white mb-0 fw-bold">Dimas Anggara</h6>
+                                <small class="text-white-50">Member Sejak 2024</small>
+                            </div>
+                        </div>
                     </div>
+                </div>
             </div>
-        </div>
 
+        </div>
     </div>
 </body>
-
 </html>

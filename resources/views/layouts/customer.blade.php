@@ -8,69 +8,140 @@
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/compiled/css/iconly.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { background-color: #f2f7ff; }
-        
-        /* Default: Mode Desktop */
-        .bottom-nav { display: none; } /* Sembunyikan menu bawah di laptop */
-        .desktop-nav { display: block; box-shadow: 0 2px 10px rgba(0,0,0,0.05); background: white; }
-        .content-area { padding-top: 30px; padding-bottom: 30px; min-height: 80vh; }
-        .header-mobile-only { display: none; }
-
-        /* Mode HP (Layar < 768px) */
-        @media (max-width: 768px) {
-            .desktop-nav { display: none; } /* Sembunyikan navbar atas di HP */
-            .bottom-nav { 
-                display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
-                background: white; padding: 12px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); 
-                justify-content: space-around; z-index: 999;
-            }
-            .content-area { padding-top: 20px; padding-bottom: 100px; }
-            .header-mobile-only { display: block; }
-            
-            .nav-item { text-align: center; color: #a0a0a0; text-decoration: none; font-size: 0.75rem; }
-            .nav-item.active { color: #435ebe; font-weight: bold; }
-            .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
-            .floating-btn { font-size: 2.5rem; color: #435ebe; transform: translateY(-15px); filter: drop-shadow(0 4px 6px rgba(67, 94, 190, 0.3)); }
+        :root {
+            --primary: #2563EB;     
+            --primary-dark: #1e40af;
+            --dark: #0F172A;        
+            --light: #F8FAFC;       
         }
+
+        body { 
+            background-color: #F8FAFC; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #475569;
+        }
+
+        h1, h2, h3, h4, h5, .fw-heading { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--dark); }
+
+        /* --- THE HOLY GRAIL CENTER (ADAPTASI DARI LOGIN) --- */
+        /* Class ini meniru .input-icon-wrapper di login */
+        .box-center {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important; 
+            margin: 0 auto !important; /* Auto kiri kanan biar center horizontal di container */
+        }
+
+        /* RESET ICON BIAR NURUT (SAMA KAYAK LOGIN) */
+        .box-center i, 
+        .box-center .bi {
+            line-height: 1 !important;
+            display: flex !important; /* Pakai Flex, bukan Block */
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            transform: none !important; /* HAPUS SEMUA TRANSFORM */
+        }
+
+        /* --- NAVBAR & UI LAIN --- */
+        .desktop-nav { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(15px); 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 0.8rem 0;
+        }
+        
+        .bottom-nav { 
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; 
+            background: white; padding: 12px 20px; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); 
+            justify-content: space-between; z-index: 999;
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+        }
+
+        .nav-item-mobile { 
+            text-align: center; color: #94a3b8; text-decoration: none; 
+            font-size: 0.7rem; font-weight: 600; flex: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .nav-item-mobile i { font-size: 1.4rem; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item-mobile.active { color: var(--primary); }
+        .nav-item-mobile.active i { transform: translateY(-3px); }
+
+        .fab-container { position: relative; top: -35px; }
+        .fab-btn {
+            width: 55px; height: 55px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            /* Terapkan box-center logic disini juga */
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.8rem;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); border: 4px solid #fff;
+        }
+
+        .content-area { padding-top: 100px; padding-bottom: 50px; min-height: 90vh; }
+
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+            .bottom-nav { display: flex; }
+            .content-area { padding-top: 30px; padding-bottom: 120px; }
+        }
+        
+        .card-premium {
+            background: white; border: 1px solid #f1f5f9; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02); transition: 0.3s;
+        }
+        .card-premium:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.05); }
     </style>
 </head>
 
 <body>
-    {{-- 1. NAVBAR DESKTOP (Hanya Muncul di Laptop) --}}
     <nav class="navbar navbar-expand-lg desktop-nav fixed-top">
         <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{{ route('customer.dashboard') }}">
-                <i class="bi bi-basket-fill"></i> LaundryKuy
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('customer.dashboard') }}">
+                <div class="bg-primary text-white rounded-3 box-center shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="bi bi-basket-fill fs-6"></i>
+                </div>
+                <span class="fw-heading fs-5 text-primary">LaundryKuy</span>
             </a>
+            
             <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-md-block">Halo, {{ Auth::user()->name }}</span>
-                <div class="avatar bg-light-primary text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                <div class="text-end d-none d-md-block">
+                    <small class="text-muted d-block" style="font-size: 0.7rem; margin-bottom: -2px;">Selamat Datang,</small>
+                    <span class="fw-bold text-dark">{{ Auth::user()->name }}</span>
+                </div>
+                <div class="bg-light-primary text-primary fw-bold rounded-circle box-center border border-2 border-white shadow-sm" style="width: 42px; height: 42px;">
                     {{ substr(Auth::user()->name, 0, 1) }}
                 </div>
-                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-sm btn-outline-danger ms-2">
-                    Logout
+                
+                {{-- TOMBOL LOGOUT FIX --}}
+                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-sm btn-light text-danger rounded-circle fw-bold ms-2 box-center shadow-sm border" style="width: 38px; height: 38px;">
+                    <i class="bi bi-box-arrow-right fs-6"></i>
                 </a>
             </div>
         </div>
     </nav>
-    <div class="d-none d-md-block" style="height: 60px;"></div> {{-- Spacer buat navbar --}}
 
     <div class="container content-area">
         @yield('content')
     </div>
 
-    {{-- 2. BOTTOM NAV (Hanya Muncul di HP) --}}
     <div class="bottom-nav">
-        <a href="{{ route('customer.dashboard') }}" class="nav-item {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('customer.dashboard') }}" class="nav-item-mobile {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door-fill"></i> Home
         </a>
-        <a href="{{ route('customer.order.create') }}" class="nav-item">
-            <i class="bi bi-plus-circle-fill floating-btn"></i>
-        </a>
-        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-item">
+        <div class="fab-container">
+            <a href="{{ route('customer.order.create') }}" class="fab-btn">
+                <i class="bi bi-plus-lg"></i>
+            </a>
+        </div>
+        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-item-mobile">
             <i class="bi bi-box-arrow-right"></i> Keluar
         </a>
     </div>
@@ -80,7 +151,7 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
         @if(session('success'))
-            Toastify({ text: "{{ session('success') }}", duration: 3000, gravity: "top", position: "center", backgroundColor: "#4fbe87" }).showToast();
+            Toastify({ text: "{{ session('success') }}", duration: 3000, gravity: "top", position: "center", backgroundColor: "#10B981", className: "rounded-pill shadow-lg fw-bold" }).showToast();
         @endif
     </script>
 </body>

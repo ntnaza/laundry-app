@@ -142,14 +142,22 @@ class TransactionController extends Controller
 
         $transaction = Transaction::findOrFail($id);
 
-        // Update Data
         $transaction->update([
             'total_price' => $request->total_price,
             'status' => $request->status,
             'delivery_status' => $request->delivery_status,
-            'user_id' => auth()->id() // Admin yang login otomatis jadi penanggung jawab (Kasir)
+            'payment_status' => $request->payment_status, // <--- JANGAN LUPA INI
+            'user_id' => auth()->id()
         ]);
 
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil diperbarui!');
+    }
+    // Cetak Surat Jalan (Delivery Slip)
+    public function printDelivery($id)
+    {
+        $transaction = Transaction::with(['customer', 'details'])->findOrFail($id);
+        $setting = \App\Models\Setting::first(); // Ambil data toko buat Kop Surat
+
+        return view('admin.transactions.print_delivery', compact('transaction', 'setting'));
     }
 }

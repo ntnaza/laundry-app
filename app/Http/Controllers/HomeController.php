@@ -4,34 +4,37 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Transaction;
-use App\Models\Setting;
-use App\Models\Service; // <--- INI WAJIB DITAMBAH
+use App\Models\Service; // <--- JANGAN LUPA PANGGIL MODEL SERVICE
 
 class HomeController extends Controller
 {
+    // Halaman Depan
     public function index()
     {
-        $setting = Setting::first();
-        
-        // Ambil semua paket laundry buat dipajang di depan
+        // Ambil data layanan buat ditampilkan di landing page
         $services = Service::all(); 
-
-        // Kirim $setting DAN $services ke tampilan
-        return view('landing', compact('setting', 'services'));
+        
+        // Return view 'welcome' (bukan landing.blade.php kalau pakai nama default)
+        return view('welcome', compact('services'));
     }
 
+    // Fungsi Cek Resi
     public function track(Request $request)
     {
-        $request->validate(['invoice_code' => 'required']);
+        // 1. Ambil Data Layanan lagi (biar pas reload, daftar harga gak hilang)
+        $services = Service::all();
 
-        $transaction = Transaction::where('invoice_code', $request->invoice_code)
-                        ->with('details.service', 'logs')
-                        ->first();
+        // 2. Cari Transaksi
+        $tracking_result = Transaction::with('customer')
+                            ->where('invoice_code', $request->invoice_code)
+                            ->first();
 
-        if(!$transaction) {
-            return redirect()->back()->with('error', 'Nomor invoice tidak ditemukan!');
+        // 3. Jika Tidak Ketemu
+        if (!$tracking_result) {
+            return redirect()->route('home')->with('error', 'Kode Invoice tidak ditemukan! Cek lagi ya.');
         }
 
-        return view('tracking', compact('transaction'));
+        // 4. Jika Ketemu, balik ke halaman depan bawa data hasil + data layanan
+        return view('welcome', compact('tracking_result', 'services'));
     }
 }
