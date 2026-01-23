@@ -18,18 +18,17 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'description' => 'required',
-            'amount' => 'required|numeric',
-            'date' => 'required|date',
+            'description' => 'required|string|max:255',
+            'amount'      => 'required|numeric|min:0',
+            'date'        => 'required|date',
         ]);
 
-        // AMBIL SEMUA INPUTAN
-        $data = $request->all();
-        
-        // TAMBAHKAN ID USER YANG SEDANG LOGIN (Wajib diisi biar gak error 1364)
-        $data['user_id'] = Auth::id(); 
-
-        Expense::create($data);
+        Expense::create([
+            'description' => $request->description,
+            'amount'      => $request->amount,
+            'date'        => $request->date,
+            'user_id'     => Auth::id() // Otomatis catat siapa yang input
+        ]);
 
         return redirect()->route('expenses.index')->with('success', 'Pengeluaran berhasil dicatat!');
     }

@@ -165,7 +165,33 @@
                     </div>
                 </div>
             </div>
+{{-- 2.5. PILIH JENIS CUCIAN (DATA DARI DB) --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-basket-fill text-success d-flex" style="line-height:1;"></i> Jenis Cucian
+                    </h6>
 
+                    <div class="mb-0">
+                        <label class="form-label small text-muted fw-bold">MAU NYUCI APA HARI INI?</label>
+                        <select name="note" class="form-select form-control-soft" style="background-image: none;" required>
+                            <option value="" selected disabled>-- Pilih Layanan --</option>
+                            
+                            @forelse($services as $service)
+                                <option value="{{ $service->name }} ({{ number_format($service->price) }}/{{ $service->unit }})">
+                                    {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }} / {{ $service->unit }}
+                                </option>
+                            @empty
+                                <option value="General Laundry">Cuci Kiloan Regular (Default)</option>
+                            @endforelse
+                            
+                        </select>
+                        <div class="form-text text-muted small mt-2">
+                            <i class="bi bi-info-circle me-1"></i> Harga final akan dihitung setelah ditimbang oleh admin.
+                        </div>
+                    </div>
+                </div>
+            </div>
             {{-- 3. JENIS LAYANAN (FIX ALIGNMENT) --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
@@ -214,9 +240,9 @@
     </div>
 </div>
 
-{{-- SCRIPT PETA --}}
 <script>
-    // Lokasi Default (Misal: Bandung Kota / Monas)
+    // --- 1. LOGIKA PETA (Leaflet JS) ---
+    // Lokasi Default (Misal: Bandung Kota) - Bisa disesuaikan dengan titik tengah area layanan laundry
     var defaultLat = -6.917464; 
     var defaultLng = 107.619123;
 
@@ -241,18 +267,22 @@
         icon: redIcon
     }).addTo(map);
 
+    // Fungsi update input hidden
     function updateInput(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lng').value = lng;
     }
 
+    // Set nilai awal
     updateInput(defaultLat, defaultLng);
 
+    // Event saat marker digeser
     marker.on('dragend', function (e) {
         var position = marker.getLatLng();
         updateInput(position.lat, position.lng);
     });
 
+    // Event saat peta diklik
     map.on('click', function(e) {
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
@@ -260,6 +290,7 @@
         updateInput(lat, lng);
     });
 
+    // Cek Lokasi User (Geolocation)
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var userLat = position.coords.latitude;
@@ -268,7 +299,40 @@
             marker.setLatLng([userLat, userLng]);
             updateInput(userLat, userLng);
         });
-    } 
+    }
+
+    // --- 2. FITUR KEAMANAN & UX (BARU) ---
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // A. Auto-Format Nomor HP (Hapus angka 0 di depan)
+        const phoneInput = document.querySelector('input[name="phone"]');
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            // Jika karakter pertama adalah '0', hapus
+            if (value.startsWith('0')) {
+                e.target.value = value.substring(1);
+            }
+        });
+
+        // B. Cegah Double Submit
+        const form = document.querySelector('form');
+        const btnSubmit = document.querySelector('.btn-submit-custom');
+        const btnText = btnSubmit.querySelector('span');
+        const btnIcon = btnSubmit.querySelector('i');
+
+        form.addEventListener('submit', function() {
+            // Matikan tombol
+            btnSubmit.disabled = true;
+            btnSubmit.style.opacity = '0.7';
+            btnSubmit.style.cursor = 'not-allowed';
+            
+            // Ubah Teks jadi Loading
+            btnText.innerText = 'MEMPROSES...';
+            
+            // Ganti ikon jadi spinner loading
+            btnIcon.className = 'spinner-border spinner-border-sm';
+        });
+    });
 </script>
 
 <style>

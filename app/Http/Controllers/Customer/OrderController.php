@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Transaction; // Jangan lupa panggil Model Transaction
+use App\Models\Transaction; 
+use App\Models\Service; // [REVISI: Kita pakai Model Service yang sudah ada]
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // <--- INI OBATNYA
 
 class OrderController extends Controller
 {
     public function index()
     {
-        // Ambil riwayat cucian milik user yang sedang login saja
         $myOrders = Transaction::where('customer_id', Auth::id())
                         ->latest()
                         ->get();
@@ -21,75 +23,94 @@ class OrderController extends Controller
 
     public function create()
     {
-        return view('customer.order_create');
+        // [UPDATE]
+        // Tarik semua data layanan dari Database (Tabel Services)
+        // Data ini dikirim ke View biar nanti bisa dipilih pelanggan
+        $services = Service::all(); 
+        
+        return view('customer.order_create', compact('services'));
     }
 
     public function store(Request $request)
     {
+        // 1. Validasi Input
         $request->validate([
-            'phone' => 'required',
-            'pickup_address' => 'required',
-            'delivery_type' => 'required',
-            // Pastikan lat long boleh ada (string/numeric)
-            'latitude' => 'nullable', 
-            'longitude' => 'nullable',
+            'phone'          => 'required|numeric', 
+            'pickup_address' => 'required|string|max:255',
+            'delivery_type'  => 'required|in:pickup,delivery', // Pastikan isinya valid
+            'latitude'       => 'nullable', 
+            'longitude'      => 'nullable',
+            'note'           => 'nullable|string|max:500'
         ]);
 
-        // ... (Kode customer firstOrCreate tetap sama) ...
-        $customer = \App\Models\Customer::firstOrCreate(
-            ['name' => Auth::user()->name],
-            ['phone' => $request->phone, 'address' => $request->pickup_address]
-        );
+        try {
+            DB::transaction(function () use ($request) {
+                // 2. Simpan/Cek Data Customer
+                // Kita cari berdasarkan 'phone' (No HP)
+                $customer = Customer::firstOrCreate(
+                    ['phone' => $request->phone], 
+                    [
+                        'name' => Auth::user()->name, // Default pakai nama user login
+                        'address' => $request->pickup_address
+                    ]
+                );
+                
+                // Update alamat terbaru
+                $customer->update([
+                    'address' => $request->pickup_address
+                ]);
 
-        // ... (Kode hitung harga tetap sama) ...
-        $pricePerKg = 7000;
-        $estimatedTotal = $request->weight ? $request->weight * $pricePerKg : 0;
+                // 3. Generate Invoice Unik (Cegah Duplikat)
+                do {
+                    $invoice = 'TRX-' . mt_rand(10000, 99999);
+                } while (Transaction::where('invoice_code', $invoice)->exists());
 
-        $invoice = 'TRX-' . mt_rand(10000, 99999);
+                // 4. Buat Transaksi
+                Transaction::create([
+                    'invoice_code'   => $invoice,
+                    'customer_id'    => $customer->id,
+                    'user_id'        => Auth::id(), 
+                    'total_price'    => 0, // Menunggu admin
+                    'status'         => 'pending',         
+                    'payment_status' => 'unpaid',  
+                    
+                    'pickup_address' => $request->pickup_address,
+                    'latitude'       => $request->latitude,
+                    'longitude'      => $request->longitude,
 
-        Transaction::create([
-            'invoice_code' => $invoice,
-            'customer_id' => $customer->id,
-            'user_id' => null,
-            'total_price' => $estimatedTotal,
-            'status' => 'pending',
-            'payment_status' => 'unpaid',
-            
-            'pickup_address' => $request->pickup_address,
-            
-            // --- SIMPAN KOORDINAT DISINI ---
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            // -------------------------------
+                    'delivery_type'   => $request->delivery_type,
+                    'delivery_status' => 'pending', 
+                    
+                    'note' => $request->note 
+                ]);
+            });
 
-            'delivery_type' => $request->delivery_type,
-            'delivery_status' => 'pending',
-            'note' => $request->note . " (Estimasi Berat: " . ($request->weight ?? 0) . " kg)"
-        ]);
+            return redirect()->route('customer.dashboard')->with('success', 'Pesanan berhasil dibuat! Kurir akan segera meluncur.');
 
-        return redirect()->route('customer.dashboard')->with('success', 'Order masuk! Lokasi sudah tercatat.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function uploadProof(Request $request, $id)
     {
         $request->validate([
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
         ]);
 
         $transaction = Transaction::where('customer_id', Auth::id())->findOrFail($id);
 
-        // Upload File ke folder 'public/payment_proofs'
         if ($request->hasFile('payment_proof')) {
             $file = $request->file('payment_proof');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('payment_proofs', $filename, 'public');
 
-            // Simpan path ke database
             $transaction->update([
-                'payment_proof' => $path
+                'payment_proof' => $path,
+                'payment_status' => 'waiting_confirmation' 
             ]);
         }
 
-        return back()->with('success', 'Bukti pembayaran berhasil dikirim! Tunggu verifikasi admin.');
+        return back()->with('success', 'Bukti transfer diterima! Tunggu admin cek ya.');
     }
 }
