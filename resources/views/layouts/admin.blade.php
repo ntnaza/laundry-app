@@ -144,7 +144,13 @@
 
         /* --- 4. UTILS --- */
         .box-center { display: flex !important; align-items: center !important; justify-content: center !important; }
-        .bi { line-height: 1 !important; display: inline-flex; }
+        
+        /* GLOBAL ICON FIX */
+        .bi, i[class^="bi-"] { 
+            line-height: 1 !important; 
+            display: inline-flex !important; 
+            vertical-align: middle;
+        }
         
         .avatar-ring {
             padding: 2px;
@@ -157,6 +163,45 @@
             background: transparent;
             padding: 0.5rem 0;
             margin-bottom: 2rem;
+        }
+
+        /* Global Reusable Styles */
+        .fw-heading { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--dark); }
+        .ls-1 { letter-spacing: 0.5px; }
+        
+        .shadow-soft {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02) !important;
+            border: 1px solid #f1f5f9 !important;
+        }
+
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.06) !important;
+            border-color: rgba(37, 99, 235, 0.1) !important;
+        }
+
+        .bg-light-primary { background-color: rgba(37, 99, 235, 0.1) !important; }
+        .bg-light-success { background-color: rgba(34, 197, 94, 0.1) !important; }
+        .bg-light-info { background-color: rgba(6, 182, 212, 0.1) !important; }
+        .bg-light-warning { background-color: rgba(245, 158, 11, 0.1) !important; }
+        .bg-light-danger { background-color: rgba(239, 68, 68, 0.1) !important; }
+        
+        .transition-300 { transition: all 0.3s ease; }
+        .hover-bg-light:hover { background-color: #f8fafc !important; }
+
+        /* GLOBAL PRINT RESET */
+        @media print {
+            body, #main, #app { margin: 0 !important; padding: 0 !important; background: white !important; width: 100% !important; }
+            .no-print, #sidebar, header, .sidebar-footer { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .shadow-soft { box-shadow: none !important; border: 1px solid #000 !important; }
+            
+            /* Paksa teks hitam saat print */
+            .text-muted, .text-secondary { color: #666 !important; }
+            .text-primary, .text-success, .text-danger, .text-warning { color: #000 !important; }
+            .bg-light-primary, .bg-light-success, .bg-light-danger { background-color: transparent !important; border: 1px solid #ccc; }
+            .badge { border: 1px solid #000; color: #000; background: transparent; }
         }
     </style>
 </head>
@@ -210,9 +255,24 @@
                                 <i class="bi bi-basket2-fill"></i> <span>Paket Laundry</span>
                             </a>
                         </li>
-                        <li class="sidebar-item {{ request()->routeIs('reports*') ? 'active' : '' }}">
+                        <li class="sidebar-item {{ request()->routeIs('promos*') ? 'active' : '' }}">
+                            <a href="{{ route('promos.index') }}" class="sidebar-link">
+                                <i class="bi bi-ticket-perforated-fill"></i> <span>Kode Promo</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item {{ request()->routeIs('inventories*') ? 'active' : '' }}">
+                            <a href="{{ route('inventories.index') }}" class="sidebar-link">
+                                <i class="bi bi-box-seam-fill"></i> <span>Stok Bahan</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item {{ request()->routeIs('reports.index') ? 'active' : '' }}">
                             <a href="{{ route('reports.index') }}" class="sidebar-link">
-                                <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Laporan</span>
+                                <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Laporan Omset</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item {{ request()->routeIs('reports.profit') ? 'active' : '' }}">
+                            <a href="{{ route('reports.profit') }}" class="sidebar-link">
+                                <i class="bi bi-pie-chart-fill"></i> <span>Laba Rugi</span>
                             </a>
                         </li>
                     @endif
@@ -241,7 +301,7 @@
             <!-- Footer Profile -->
             <div class="sidebar-footer">
                 <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-3">
+                    <a href="{{ route('profile.index') }}" class="d-flex align-items-center gap-3 text-decoration-none hover-scale transition-300">
                         <div class="avatar-ring">
                             <div class="avatar bg-primary text-white rounded-circle box-center" style="width: 38px; height: 38px;">
                                 <span class="fw-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
@@ -251,7 +311,7 @@
                             <h6 class="mb-0 fw-bold text-dark fs-6">{{ explode(' ', auth()->user()->name)[0] }}</h6>
                             <small class="text-muted d-block" style="font-size: 0.7rem;">{{ ucfirst(auth()->user()->role) }}</small>
                         </div>
-                    </div>
+                    </a>
                     
                     <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
                        class="btn btn-light rounded-circle text-danger shadow-sm box-center" style="width: 36px; height: 36px;" data-bs-toggle="tooltip" title="Logout">

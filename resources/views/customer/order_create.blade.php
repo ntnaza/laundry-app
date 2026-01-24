@@ -165,30 +165,40 @@
                     </div>
                 </div>
             </div>
-{{-- 2.5. PILIH JENIS CUCIAN (DATA DARI DB) --}}
+            {{-- 2.5. PREFERENSI LAYANAN & PROMO --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-basket-fill text-success d-flex" style="line-height:1;"></i> Jenis Cucian
+                        <i class="bi bi-basket-fill text-success d-flex" style="line-height:1;"></i> Detail Pesanan
                     </h6>
 
-                    <div class="mb-0">
-                        <label class="form-label small text-muted fw-bold">MAU NYUCI APA HARI INI?</label>
-                        <select name="note" class="form-select form-control-soft" style="background-image: none;" required>
-                            <option value="" selected disabled>-- Pilih Layanan --</option>
-                            
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">ESTIMASI LAYANAN</label>
+                        <select name="preferred_service" class="form-select form-control-soft" style="background-image: none;">
+                            <option value="" selected disabled>-- Mau nyuci apa? --</option>
                             @forelse($services as $service)
-                                <option value="{{ $service->name }} ({{ number_format($service->price) }}/{{ $service->unit }})">
+                                <option value="{{ $service->name }}">
                                     {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }} / {{ $service->unit }}
                                 </option>
                             @empty
-                                <option value="General Laundry">Cuci Kiloan Regular (Default)</option>
+                                <option value="Cuci Kiloan">Cuci Kiloan Regular</option>
                             @endforelse
-                            
                         </select>
-                        <div class="form-text text-muted small mt-2">
-                            <i class="bi bi-info-circle me-1"></i> Harga final akan dihitung setelah ditimbang oleh admin.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">KODE PROMO (OPSIONAL)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 fw-bold text-warning rounded-start-3 ps-3">
+                                <i class="bi bi-ticket-perforated-fill"></i>
+                            </span>
+                            <input type="text" name="promo_code" class="form-control form-control-soft border-start-0 rounded-end-3 text-uppercase fw-bold" placeholder="Punya voucher diskon?">
                         </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small text-muted fw-bold">CATATAN KHUSUS</label>
+                        <textarea name="note" class="form-control form-control-soft" rows="2" placeholder="Cth: Jangan disetrika, pisahkan baju putih..."></textarea>
                     </div>
                 </div>
             </div>

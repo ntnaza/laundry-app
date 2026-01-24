@@ -194,12 +194,12 @@
 
                     <div class="d-flex align-items-center gap-4 mt-5">
                         <div class="d-flex align-items-center gap-2">
-                            <h2 class="mb-0 fw-bold text-dark">1.5k+</h2>
+                            <h2 class="mb-0 fw-bold text-dark">{{ $totalCustomers > 1000 ? ($totalCustomers/1000).'k+' : $totalCustomers }}</h2>
                             <small class="text-muted lh-1">Pelanggan<br>Aktif</small>
                         </div>
                         <div class="vr opacity-25"></div>
                         <div class="d-flex align-items-center gap-2">
-                            <h2 class="mb-0 fw-bold text-dark">4.9</h2>
+                            <h2 class="mb-0 fw-bold text-dark">{{ number_format($avgRating, 1) }}</h2>
                             <small class="text-muted lh-1">Rating<br>Layanan</small>
                         </div>
                     </div>
@@ -282,6 +282,7 @@
         </div>
     </section>
 
+    @if($bestPromo)
     <section class="py-5">
         <div class="container">
             <div class="bg-primary rounded-4 p-5 text-white position-relative overflow-hidden shadow-lg" data-aos="zoom-in">
@@ -291,8 +292,10 @@
                 <div class="row align-items-center position-relative z-1">
                     <div class="col-lg-7">
                         <span class="badge bg-warning text-dark mb-3">Promo Spesial</span>
-                        <h2 class="fw-bold mb-3 text-white">Diskon 20% Untuk Member Baru!</h2>
-                        <p class="opacity-75 mb-4">Daftar sekarang dan dapatkan potongan harga otomatis untuk transaksi pertama Anda. Tanpa minimum order.</p>
+                        <h2 class="fw-bold mb-3 text-white">
+                            Diskon {{ $bestPromo->type == 'percentage' ? $bestPromo->value.'%' : 'Rp '.number_format($bestPromo->value/1000).'rb' }} Untukmu!
+                        </h2>
+                        <p class="opacity-75 mb-4">Gunakan kode voucher <strong>{{ $bestPromo->code }}</strong> saat melakukan pemesanan. {{ $bestPromo->end_date ? 'Berlaku sampai '.\Carbon\Carbon::parse($bestPromo->end_date)->format('d M') : 'Periode terbatas!' }}</p>
                         <a href="{{ route('register') }}" class="btn btn-light text-primary rounded-pill px-4 fw-bold shadow-sm">
                             Ambil Promo Sekarang
                         </a>
@@ -304,6 +307,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     <section id="process" class="section-padding bg-light">
         <div class="container">
@@ -397,51 +401,29 @@
                 <h2 class="display-6 mt-2">Kata Mereka</h2>
             </div>
             <div class="row g-4">
+                @forelse($reviews as $review)
                 <div class="col-md-4">
                     <div class="testi-card h-100">
-                        <div class="stars">
-                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        <div class="stars mb-3">
+                            @for($i=1; $i<=5; $i++)
+                                <i class="bi bi-star-fill {{ $i <= $review->rate ? 'text-warning' : 'text-muted opacity-25' }}"></i>
+                            @endfor
                         </div>
-                        <p class="text-muted small mb-4">"Gila sih, order pagi jam 8, jam 9 kurir dateng. Besok sorenya udah balik lagi dalam keadaan wangi banget. Recommended!"</p>
+                        <p class="text-muted small mb-4">"{{ $review->content }}"</p>
                         <div class="d-flex-center gap-3">
-                            <img src="https://i.pravatar.cc/150?img=68" class="rounded-circle" width="45" alt="User">
+                            <div class="bg-primary text-white rounded-circle box-center fw-bold" style="width: 45px; height: 45px;">
+                                {{ substr($review->user->name, 0, 1) }}
+                            </div>
                             <div>
-                                <h6 class="fw-bold mb-0 text-dark">Rizky Billar</h6>
-                                <small class="text-muted" style="font-size: 0.75rem;">Mahasiswa</small>
+                                <h6 class="fw-bold mb-0 text-dark">{{ $review->user->name }}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">Pelanggan Setia</small>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="testi-card h-100">
-                        <div class="stars">
-                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                        </div>
-                        <p class="text-muted small mb-4">"Sangat terbantu buat ibu rumah tangga yang sibuk. Fitur trackingnya keren, jadi tau bajunya lagi diapain."</p>
-                        <div class="d-flex-center gap-3">
-                            <img src="https://i.pravatar.cc/150?img=44" class="rounded-circle" width="45" alt="User">
-                            <div>
-                                <h6 class="fw-bold mb-0 text-dark">Siti Badriah</h6>
-                                <small class="text-muted" style="font-size: 0.75rem;">Ibu Rumah Tangga</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="testi-card h-100">
-                        <div class="stars">
-                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                        </div>
-                        <p class="text-muted small mb-4">"Harganya transparan, gak ada biaya aneh-aneh. Pakaian kantor saya rapi, licin, siap pakai buat meeting."</p>
-                        <div class="d-flex-center gap-3">
-                            <img src="https://i.pravatar.cc/150?img=12" class="rounded-circle" width="45" alt="User">
-                            <div>
-                                <h6 class="fw-bold mb-0 text-dark">Budi Santoso</h6>
-                                <small class="text-muted" style="font-size: 0.75rem;">Karyawan Swasta</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @empty
+                <div class="col-12 text-center text-muted">Belum ada ulasan. Jadilah yang pertama!</div>
+                @endforelse
             </div>
         </div>
     </section>

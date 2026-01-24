@@ -4,37 +4,55 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Transaction;
-use App\Models\Service; // <--- JANGAN LUPA PANGGIL MODEL SERVICE
+use App\Models\Service;
+use App\Models\Customer;
+use App\Models\Testimonial;
+use App\Models\Promo;
 
 class HomeController extends Controller
 {
     // Halaman Depan
     public function index()
     {
-        // Ambil data layanan buat ditampilkan di landing page
+        // 1. Data Layanan
         $services = Service::all(); 
+
+        // 2. Statistik
+        $totalCustomers = Customer::count();
+        $avgRating = Testimonial::avg('rate') ?? 0;
         
-        // Return view 'welcome' (bukan landing.blade.php kalau pakai nama default)
-        return view('welcome', compact('services'));
+        // 3. Testimoni (Ambil 3 terbaru)
+        $reviews = Testimonial::with('user')->latest()->take(3)->get();
+
+        // 4. Promo Terbaik (Untuk Banner)
+        $bestPromo = Promo::where('is_active', true)
+                        ->whereDate('end_date', '>=', now())
+                        ->orWhereNull('end_date') // Promo selamanya
+                        ->orderBy('value', 'desc')
+                        ->first();
+        
+        return view('welcome', compact('services', 'totalCustomers', 'avgRating', 'reviews', 'bestPromo'));
     }
 
     // Fungsi Cek Resi
     public function track(Request $request)
     {
-        // 1. Ambil Data Layanan lagi (biar pas reload, daftar harga gak hilang)
+        // Tetap bawa data landing page lainnya biar gak error
         $services = Service::all();
+        $totalCustomers = Customer::count();
+        $avgRating = Testimonial::avg('rate') ?? 0;
+        $reviews = Testimonial::with('user')->latest()->take(3)->get();
+        $bestPromo = Promo::where('is_active', true)->orderBy('value', 'desc')->first();
 
-        // 2. Cari Transaksi
+        // Cari Transaksi
         $tracking_result = Transaction::with('customer')
                             ->where('invoice_code', $request->invoice_code)
                             ->first();
 
-        // 3. Jika Tidak Ketemu
         if (!$tracking_result) {
             return redirect()->route('home')->with('error', 'Kode Invoice tidak ditemukan! Cek lagi ya.');
         }
 
-        // 4. Jika Ketemu, balik ke halaman depan bawa data hasil + data layanan
-        return view('welcome', compact('tracking_result', 'services'));
+        return view('welcome', compact('tracking_result', 'services', 'totalCustomers', 'avgRating', 'reviews', 'bestPromo'));
     }
 }

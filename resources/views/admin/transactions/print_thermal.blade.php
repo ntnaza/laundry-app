@@ -62,6 +62,7 @@
             .no-print { display: none; }
             @page { margin: 0; size: auto; }
             body { margin: 0; padding: 0; }
+            .container { margin-top: 0 !important; } /* Reset margin saat print */
         }
     </style>
 </head>
@@ -71,7 +72,7 @@
         <a href="{{ route('transactions.show', $transaction->id) }}" class="btn-back">⬅ Kembali ke Detail</a>
     </div>
 
-    <div class="container" style="margin-top: 20px;"> {{-- Margin top buat kompensasi no-print bar di layar --}}
+    <div class="container" style="margin-top: 40px;"> {{-- Margin layar --}}
         
         {{-- HEADER TOKO --}}
         <div class="text-center">

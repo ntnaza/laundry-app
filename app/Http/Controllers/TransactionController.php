@@ -41,58 +41,101 @@ class TransactionController extends Controller
             'service_id'  => 'required|array',
             'qty'         => 'required|array',
             'qty.*'       => 'required|numeric|min:1', // Pastikan qty angka & minimal 1
+            'promo_code'  => 'nullable|string|exists:promos,code' // Validasi awal kode ada di db
         ]);
 
         try {
             DB::transaction(function () use ($request) {
                 
-                // 2. Generate Invoice Otomatis (Lebih Aman di Backend)
-                // Format: INV-TAHUNBULANTANGGAL-JAMMENITDETIK
+                // 2. Hitung Subtotal Dulu
+                $subtotal = 0;
+                $items = []; // Simpan data item sementara
+
+                foreach ($request->service_id as $key => $service_id) {
+                    $service = Service::findOrFail($service_id);
+                    $qty = $request->qty[$key];
+                    $itemSubtotal = $service->price * $qty;
+                    
+                    $subtotal += $itemSubtotal;
+                    $items[] = [
+                        'service_id' => $service_id,
+                        'qty' => $qty,
+                        'price' => $service->price,
+                        'subtotal' => $itemSubtotal
+                    ];
+                }
+
+                // 3. Cek Promo & Hitung Diskon
+                $discountAmount = 0;
+                $promoId = null;
+
+                if ($request->promo_code) {
+                    $promo = \App\Models\Promo::where('code', $request->promo_code)->first();
+                    
+                    // Validasi Logis Promo
+                    if ($promo && $promo->isValid() && $subtotal >= $promo->min_spend) {
+                        $promoId = $promo->id;
+                        
+                        if ($promo->type == 'percentage') {
+                            $discountRaw = $subtotal * ($promo->value / 100);
+                            // Cek Max Discount
+                            if ($promo->max_discount && $discountRaw > $promo->max_discount) {
+                                $discountAmount = $promo->max_discount;
+                            } else {
+                                $discountAmount = $discountRaw;
+                            }
+                        } else {
+                            $discountAmount = $promo->value;
+                        }
+
+                        // Pastikan diskon gak minus
+                        if ($discountAmount > $subtotal) $discountAmount = $subtotal;
+                    }
+                }
+
+                $grandTotal = $subtotal - $discountAmount;
+
+                // 4. Generate Invoice
                 $invoice_code = 'INV-' . date('Ymd-His'); 
 
-                // 3. Simpan Kepala Transaksi
+                // 5. Simpan Kepala Transaksi
                 $transaction = Transaction::create([
                     'invoice_code'   => $invoice_code,
                     'customer_id'    => $request->customer_id,
-                    'user_id'        => Auth::id(), // Pastikan Admin sudah login
-                    'total_price'    => 0, // Nanti diupdate
+                    'user_id'        => Auth::id(),
+                    'subtotal'       => $subtotal,        // <--- Data Baru
+                    'discount_amount'=> $discountAmount,  // <--- Data Baru
+                    'promo_id'       => $promoId,         // <--- Data Baru
+                    'total_price'    => $grandTotal,      // Harga Akhir
                     'status'         => 'pending',
                     'payment_status' => 'unpaid',
-                    'delivery_type'  => 'none', // Default ambil sendiri jika admin yang input
-                    'delivery_status'=> 'none'
+                    'delivery_type'  => $request->delivery_type,
+                    'delivery_status'=> ($request->delivery_type == 'none') ? 'none' : 'pending',
+                    'note'           => $request->note
                 ]);
 
-                $total_bayar = 0;
-
-                // 4. Looping Item Cucian
-                foreach ($request->service_id as $key => $service_id) {
-                    
-                    $service = Service::findOrFail($service_id); // Pakai failOrFail biar aman
-                    $qty = $request->qty[$key];
-                    $subtotal = $service->price * $qty;
-
+                // 6. Simpan Detail Item
+                foreach ($items as $item) {
                     TransactionDetail::create([
                         'transaction_id' => $transaction->id,
-                        'service_id'     => $service_id,
-                        'qty'            => $qty,
-                        'price_per_unit' => $service->price,
-                        'subtotal'       => $subtotal
+                        'service_id'     => $item['service_id'],
+                        'qty'            => $item['qty'],
+                        'price_per_unit' => $item['price'],
+                        'subtotal'       => $item['subtotal']
                     ]);
-
-                    $total_bayar += $subtotal;
                 }
-
-                // 5. Update Total Harga Final
-                $transaction->update(['total_price' => $total_bayar]);
                 
-                // Opsional: Catat Log Pembuatan
-                // \App\Models\TransactionLog::create([...]);
+                // Opsional: Catat Log
+                \App\Models\TransactionLog::create([
+                    'transaction_id' => $transaction->id,
+                    'status' => 'pending',
+                    'user_id' => Auth::id()
+                ]);
             });
 
             return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dibuat!');
 
         } catch (\Exception $e) {
-            // Jika ada error, kembalikan ke form dengan pesan error
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
@@ -100,8 +143,8 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        // Kita load detail item dan servicenya biar muncul namanya
-        $transaction->load(['details.service', 'customer']);
+        // Kita load detail item, servicenya, dan log riwayat biar muncul semua
+        $transaction->load(['details.service', 'customer', 'logs.user']);
         
         return view('admin.transactions.show', compact('transaction'));
     }

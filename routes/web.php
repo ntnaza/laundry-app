@@ -40,9 +40,13 @@ Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(fu
     Route::get('/transactions/{transaction}/print-thermal', [TransactionController::class, 'printThermal'])->name('transactions.printThermal');
     Route::get('/transactions/{transaction}/print-delivery', [TransactionController::class, 'printDelivery'])->name('transactions.printDelivery');
     Route::put('/transactions/{transaction}/update-status', [TransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
-    Route::post('/order/{id}/upload-proof', [OrderController::class, 'uploadProof'])->name('order.uploadProof');
+    
     // Data Pelanggan & Profil Diri
     Route::resource('customers', CustomerController::class);
+    
+    // Stok Barang (Inventaris)
+    Route::resource('inventories', \App\Http\Controllers\InventoryController::class);
+
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
@@ -51,10 +55,14 @@ Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(fu
 Route::middleware(['auth', 'role:owner,admin'])->prefix('admin')->group(function () {
     // Laporan Excel
     Route::get('/reports/export', [ReportController::class, 'exportExcel'])->name('reports.export');
+    Route::get('/reports/profit', [ReportController::class, 'profit'])->name('reports.profit'); // <--- Route Baru
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
     // Manajemen Paket Laundry
     Route::resource('services', ServiceController::class);
+    
+    // Manajemen Promo & Diskon
+    Route::resource('promos', \App\Http\Controllers\PromoController::class);
 });
 
 // GROUP 3: KHUSUS OWNER (Admin & Staff Gak Boleh Masuk)
@@ -78,4 +86,10 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     // Order & Maps
     Route::get('/order', [OrderController::class, 'create'])->name('order.create');
     Route::post('/order', [OrderController::class, 'store'])->name('order.store');
+    
+    // Upload Bukti Bayar
+    Route::post('/order/{id}/upload-proof', [OrderController::class, 'uploadProof'])->name('order.uploadProof');
+    
+    // Kirim Review
+    Route::post('/order/{id}/review', [OrderController::class, 'storeReview'])->name('order.review');
 });

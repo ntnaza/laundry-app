@@ -4,65 +4,91 @@
 @section('page-title', 'Manajemen Akun Staf')
 
 @section('content')
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4>Daftar Pengguna</h4>
-        <a href="{{ route('users.create') }}" class="btn btn-primary">+ Tambah User</a>
+<div class="card border-0 shadow-soft rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-bottom border-light pt-4 px-4 pb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h5 class="fw-heading mb-1">Daftar Pengguna</h5>
+            <p class="text-muted small mb-0">Kelola akses admin dan staff sistem.</p>
+        </div>
+        <a href="{{ route('users.create') }}" class="btn btn-primary rounded-pill px-4 fw-bold d-flex align-items-center gap-2 shadow-sm hover-top transition-300">
+            <i class="bi bi-person-plus-fill"></i> Tambah User
+        </a>
     </div>
-    <div class="card-body">
+
+    <div class="card-body p-0">
         
         @if(session('success')) 
-            <div class="alert alert-success">{{ session('success') }}</div> 
+            <div class="alert alert-success border-0 shadow-sm rounded-0 mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-5"></i> {{ session('success') }}
+            </div> 
         @endif
         
         @if(session('error')) 
-            <div class="alert alert-danger">{{ session('error') }}</div> 
+            <div class="alert alert-danger border-0 shadow-sm rounded-0 mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-circle-fill fs-5"></i> {{ session('error') }}
+            </div> 
         @endif
 
         <div class="table-responsive">
-            <table class="table table-striped" id="table1">
-                <thead>
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Role (Jabatan)</th>
-                        <th>Aksi</th>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted border-0 ls-1">Nama Pengguna</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted border-0 ls-1">Email</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted border-0 ls-1">Role</th>
+                        <th class="pe-4 py-3 text-uppercase small fw-bold text-muted border-0 ls-1 text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($users as $u)
-                    <tr>
-                        <td class="fw-bold">{{ $u->name }}</td>
-                        <td>{{ $u->email }}</td>
-                        <td>
-                            {{-- LOGIKA BARU: Paksa jadi huruf kecil biar tidak sensitif --}}
+                    <tr class="border-bottom border-light-subtle transition-300">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar rounded-circle bg-light-primary text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    {{ substr($u->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">{{ $u->name }}</h6>
+                                    @if(auth()->id() == $u->id)
+                                        <span class="badge bg-success-subtle text-success border border-success rounded-pill" style="font-size: 0.6rem;">It's You</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 text-secondary">{{ $u->email }}</td>
+                        <td class="py-3">
                             @php $role = strtolower($u->role); @endphp
                             
                             @if($role == 'owner') 
-                                <span class="badge bg-danger">Owner</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-1">
+                                    <i class="bi bi-shield-lock-fill me-1"></i> Owner
+                                </span>
                             @elseif($role == 'admin') 
-                                <span class="badge bg-primary">Admin</span>
+                                <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-3 py-1">
+                                    <i class="bi bi-laptop me-1"></i> Admin
+                                </span>
                             @else 
-                                <span class="badge bg-secondary">Staff</span>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary rounded-pill px-3 py-1">
+                                    <i class="bi bi-person-badge me-1"></i> Staff
+                                </span>
                             @endif
-
-                            {{-- DEBUG: Tampilkan isi asli database (bisa dihapus nanti kalau sudah oke) --}}
-                            <small class="text-muted ms-1">({{ $u->role }})</small>
                         </td>
-                        <td>
-                            <a href="{{ route('users.edit', $u->id) }}" class="btn btn-sm btn-warning me-1">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            
-                            @if(auth()->id() != $u->id)
-                            <form action="{{ route('users.destroy', $u->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
-                                @csrf 
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            @endif
+                        <td class="pe-4 py-3 text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ route('users.edit', $u->id) }}" class="btn btn-icon btn-light-warning text-warning rounded-circle box-center shadow-sm" style="width: 36px; height: 36px;" title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                
+                                @if(auth()->id() != $u->id)
+                                <form action="{{ route('users.destroy', $u->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                    @csrf 
+                                    @method('DELETE')
+                                    <button class="btn btn-icon btn-light-danger text-danger rounded-circle box-center shadow-sm" style="width: 36px; height: 36px;" title="Hapus">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
@@ -71,4 +97,16 @@
         </div>
     </div>
 </div>
+
+<style>
+    .hover-top:hover { transform: translateY(-3px); }
+    .btn-icon:hover { transform: translateY(-2px); }
+    .btn-light-warning { background-color: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.1); }
+    .btn-light-danger { background-color: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.1); }
+    
+    .bg-danger-subtle { background-color: #fef2f2 !important; }
+    .bg-primary-subtle { background-color: #eff6ff !important; }
+    .bg-secondary-subtle { background-color: #f8fafc !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+</style>
 @endsection
