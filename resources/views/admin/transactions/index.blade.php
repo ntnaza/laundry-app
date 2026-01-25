@@ -146,10 +146,10 @@
                                         </a>
                                     @endif
 
-                                    {{-- Tombol Proses (Jika belum ditimbang) --}}
-                                    @if($t->total_price == 0)
-                                        <a href="{{ route('transactions.edit', $t->id) }}" class="btn btn-icon btn-light-warning text-warning rounded-circle box-center shadow-sm" style="width: 34px; height: 34px;" data-bs-toggle="tooltip" title="Proses / Timbang">
-                                            <i class="bi bi-basket-fill"></i>
+                                    {{-- Tombol Proses / Edit (Selama belum selesai) --}}
+                                    @if($t->status != 'done')
+                                        <a href="{{ route('transactions.edit', $t->id) }}" class="btn btn-icon btn-light-warning text-warning rounded-circle box-center shadow-sm" style="width: 34px; height: 34px;" data-bs-toggle="tooltip" title="Proses / Edit Pesanan">
+                                            <i class="bi bi-pencil-fill"></i>
                                         </a>
                                     @endif
                                 </div>

@@ -37,12 +37,21 @@
                     @forelse($promos as $p)
                     <tr class="border-bottom border-light-subtle transition-300">
                         <td class="ps-4 py-3">
-                            <span class="badge bg-light-primary text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-bold font-monospace fs-6">
-                                {{ $p->code }}
-                            </span>
-                            @if($p->min_spend > 0)
-                                <div class="small text-muted mt-1" style="font-size: 0.7rem;">Min. Belanja: Rp {{ number_format($p->min_spend) }}</div>
-                            @endif
+                            <div class="d-flex align-items-center gap-3">
+                                @if($p->image)
+                                    <div class="rounded border overflow-hidden" style="width: 60px; height: 35px;">
+                                        <img src="{{ asset('storage/' . $p->image) }}" alt="Promo" class="w-100 h-100 object-fit-cover">
+                                    </div>
+                                @endif
+                                <div>
+                                    <span class="badge bg-light-primary text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-bold font-monospace fs-6">
+                                        {{ $p->code }}
+                                    </span>
+                                    @if($p->min_spend > 0)
+                                        <div class="small text-muted mt-1" style="font-size: 0.7rem;">Min. Belanja: Rp {{ number_format($p->min_spend) }}</div>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         <td class="py-3">
                             @if($p->type == 'percentage')

@@ -14,6 +14,7 @@ class Transaction extends Model
         'invoice_code',
         'customer_id',
         'user_id',
+        'app_user_id',     
         'total_price',
         'status',
         'payment_status',
@@ -23,10 +24,11 @@ class Transaction extends Model
         'delivery_type',
         'delivery_status',
         'payment_proof',
+        'snap_token', // <--- Baru
         'note',
-        'promo_id',        // <--- Baru
-        'discount_amount', // <--- Baru
-        'subtotal'         // <--- Baru
+        'promo_id',        
+        'discount_amount', 
+        'subtotal'         
     ];
 
     // Relasi ke Customer

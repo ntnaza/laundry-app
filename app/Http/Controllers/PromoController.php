@@ -40,9 +40,16 @@ class PromoController extends Controller
             'max_discount' => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        Promo::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('promos', 'public');
+        }
+
+        Promo::create($data);
 
         return redirect()->route('promos.index')->with('success', 'Kode Promo berhasil dibuat!');
     }
@@ -71,11 +78,20 @@ class PromoController extends Controller
             'max_discount' => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         // Handle checkbox is_active (karena kalau unchecked, dia gak kirim value)
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($promo->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($promo->image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($promo->image);
+            }
+            $data['image'] = $request->file('image')->store('promos', 'public');
+        }
 
         $promo->update($data);
 
@@ -87,6 +103,11 @@ class PromoController extends Controller
      */
     public function destroy(Promo $promo)
     {
+        // Hapus gambar jika ada
+        if ($promo->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($promo->image)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($promo->image);
+        }
+        
         $promo->delete();
         return redirect()->route('promos.index')->with('success', 'Kode Promo dihapus!');
     }

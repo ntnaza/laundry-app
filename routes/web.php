@@ -24,6 +24,9 @@ use App\Http\Controllers\Customer\OrderController; // Panggil Controller Custome
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/track', [HomeController::class, 'track'])->name('track');
 
+// Route Midtrans (Harus Publik buat Callback)
+Route::post('/midtrans/callback', [App\Http\Controllers\Customer\OrderController::class, 'callback']); 
+
 // 2. OTENTIKASI (Login/Register/Logout)
 Auth::routes(); // Biarkan default biar orang bisa register
 
@@ -38,6 +41,7 @@ Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(fu
     // Operasional Harian
     Route::resource('transactions', TransactionController::class);
     Route::get('/transactions/{transaction}/print-thermal', [TransactionController::class, 'printThermal'])->name('transactions.printThermal');
+    Route::get('/transactions/{transaction}/print-invoice', [TransactionController::class, 'printInvoice'])->name('transactions.printInvoice'); // <--- Route Baru
     Route::get('/transactions/{transaction}/print-delivery', [TransactionController::class, 'printDelivery'])->name('transactions.printDelivery');
     Route::put('/transactions/{transaction}/update-status', [TransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
     
@@ -87,6 +91,9 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     Route::get('/order', [OrderController::class, 'create'])->name('order.create');
     Route::post('/order', [OrderController::class, 'store'])->name('order.store');
     
+    // Payment (Midtrans)
+    Route::get('/order/{id}/pay', [OrderController::class, 'pay'])->name('order.pay'); // <--- Route Baru
+
     // Upload Bukti Bayar
     Route::post('/order/{id}/upload-proof', [OrderController::class, 'uploadProof'])->name('order.uploadProof');
     

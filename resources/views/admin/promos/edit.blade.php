@@ -13,7 +13,7 @@
             </div>
             
             <div class="card-body p-4">
-                <form action="{{ route('promos.update', $promo->id) }}" method="POST">
+                <form action="{{ route('promos.update', $promo->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
@@ -24,6 +24,21 @@
                             <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-ticket-perforated-fill"></i></span>
                             <input type="text" name="code" class="form-control border-light shadow-sm bg-white font-monospace text-uppercase fw-bold" value="{{ $promo->code }}" required>
                         </div>
+                    </div>
+
+                    {{-- GAMBAR PROMO --}}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Gambar Banner</label>
+                        @if($promo->image)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/' . $promo->image) }}" alt="Banner Promo" class="img-fluid rounded shadow-sm" style="max-height: 200px;">
+                            </div>
+                        @endif
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-image"></i></span>
+                            <input type="file" name="image" class="form-control border-light shadow-sm bg-white" accept="image/*">
+                        </div>
+                        <div class="form-text small">Biarkan kosong jika tidak ingin mengubah gambar.</div>
                     </div>
 
                     <div class="row g-4 mb-4">

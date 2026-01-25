@@ -8,75 +8,108 @@
     @csrf
     @method('PUT')
 
-    {{-- Ambil data service utama (asumsi single service transaction) --}}
-    @php
-        $detail = $transaction->details->first();
-        $serviceName = $detail && $detail->service ? $detail->service->name : 'Layanan Custom';
-        $pricePerKg = $detail && $detail->service ? $detail->service->price : 0;
-        
-        // Berat awal (jika ada, atau 0)
-        $initialWeight = $detail ? $detail->qty : 0;
-    @endphp
-
-    {{-- Simpan Harga Satuan di Hidden Input buat JS --}}
-    <input type="hidden" id="pricePerKg" value="{{ $pricePerKg }}">
-
     <div class="row g-4">
         {{-- SECTION UTAMA (KIRI) --}}
         <div class="col-xl-8 col-lg-7">
             
-            {{-- 1. INPUT BERAT & AUTO CALCULATE --}}
+            {{-- 1. RINCIAN ITEM & VERIFIKASI (DYNAMIC) --}}
             <div class="card border-0 shadow-soft rounded-4 mb-4 overflow-hidden">
-                {{-- HEADER: INFO LAYANAN --}}
                 <div class="card-header bg-white border-bottom border-light p-4">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                        {{-- Kiri: Icon & Nama Paket --}}
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center bg-primary text-white rounded-4 shadow-sm flex-shrink-0" style="width: 52px; height: 52px;">
-                                <i class="bi bi-basket2-fill fs-4"></i>
-                            </div>
-                            <div>
-                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-1" style="font-size: 0.65rem;">Paket Laundry</small>
-                                <h5 class="fw-heading text-dark mb-0">{{ $serviceName }}</h5>
-                            </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary text-white rounded-circle box-center flex-shrink-0" style="width: 40px; height: 40px;">
+                            <i class="bi bi-list-check fs-5"></i>
                         </div>
-                        
-                        {{-- Kanan: Badge Harga Satuan --}}
-                        <div class="bg-light px-3 py-2 rounded-pill border border-light d-flex align-items-center gap-2">
-                            <i class="bi bi-tag-fill text-primary"></i>
-                            <span class="text-muted small text-uppercase fw-bold">Rate:</span>
-                            <span class="text-dark fw-bold">Rp {{ number_format($pricePerKg, 0, ',', '.') }}<span class="text-muted fw-normal small">/kg</span></span>
+                        <div>
+                            <h6 class="fw-heading text-dark mb-0">Rincian & Verifikasi Item</h6>
+                            <p class="text-muted small mb-0">Sesuaikan berat/jumlah riil jika berbeda.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="card-body p-4">
-                    <div class="row g-4 align-items-center">
-                        {{-- INPUT BERAT (MAIN STAR) --}}
-                        <div class="col-md-5">
-                            <label class="form-label text-muted fw-bold small text-uppercase ls-1">Berat Cucian (Kg)</label>
-                            <div class="input-group">
-                                <input type="number" step="0.1" name="weight" id="weightInput"
-                                       class="form-control fw-heading text-dark fs-2 border-primary focus-ring rounded-3 py-2" 
-                                       value="{{ $initialWeight > 0 ? $initialWeight : '' }}" 
-                                       placeholder="0.0" required autofocus>
-                                <span class="input-group-text bg-primary text-white fw-bold border-primary px-3">Kg</span>
-                            </div>
-                        </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3 text-uppercase small text-muted">Layanan</th>
+                                    <th class="py-3 text-uppercase small text-muted" style="width: 150px;">Qty / Berat</th>
+                                    <th class="pe-4 py-3 text-end text-uppercase small text-muted">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($transaction->details as $item)
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="fw-bold text-dark">{{ $item->service->name }}</div>
+                                        <div class="small text-muted">
+                                            @if($item->service->type == 'kiloan')
+                                                <span class="badge bg-info-subtle text-info border border-info rounded-pill px-2">Kiloan</span>
+                                            @else
+                                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-2">Satuan</span>
+                                            @endif
+                                            <span class="ms-1">@ Rp {{ number_format($item->price_per_unit) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="input-group input-group-sm">
+                                            {{-- LOGIKA INPUT: 
+                                                - Jika Kiloan: Step 0.1 (bisa koma), Min 0.1, Value tampil apa adanya (float)
+                                                - Jika Satuan: Step 1 (bulat), Min 1, Value dipaksa jadi Integer (int) biar gak dianggap desimal 
+                                            --}}
+                                            @php $isKiloan = $item->service->type == 'kiloan'; @endphp
+                                            
+                                            <input type="number" 
+                                                   step="{{ $isKiloan ? '0.01' : '1' }}" 
+                                                   min="{{ $isKiloan ? '0.1' : '1' }}"
+                                                   name="qty[{{ $item->id }}]" 
+                                                   class="form-control fw-bold text-center qty-input"
+                                                   data-price="{{ $item->price_per_unit }}"
+                                                   value="{{ $isKiloan ? $item->qty : (int)$item->qty }}">
+                                            
+                                            <span class="input-group-text bg-light text-muted">{{ $item->service->unit }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 py-3 text-end fw-bold text-dark item-subtotal">
+                                        Rp {{ number_format($item->subtotal) }}
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="border-top">
+                                {{-- Subtotal --}}
+                                <tr>
+                                    <td colspan="2" class="text-end py-2 text-muted small text-uppercase fw-bold">Subtotal</td>
+                                    <td class="pe-4 py-2 text-end fw-bold" id="displaySubtotal">Rp {{ number_format($transaction->subtotal) }}</td>
+                                </tr>
+                                {{-- Diskon --}}
+                                @if($transaction->promo)
+                                <tr class="text-danger">
+                                    <td colspan="2" class="text-end py-2 small text-uppercase fw-bold">
+                                        Diskon ({{ $transaction->promo->code }}) 
+                                        {{-- Tampilkan Detail Diskon --}}
+                                        <span class="badge bg-danger-subtle text-danger ms-1 border border-danger">
+                                            @if($transaction->promo->type == 'percentage')
+                                                {{ $transaction->promo->value }}%
+                                            @else
+                                                Potongan Tetap
+                                            @endif
+                                        </span>
 
-                        <div class="col-md-1 text-center d-none d-md-block">
-                            <i class="bi bi-arrow-right fs-3 text-muted opacity-50"></i>
-                        </div>
-
-                        {{-- DISPLAY TOTAL HARGA (READONLY) --}}
-                        <div class="col-md-6 text-md-end">
-                            <label class="form-label text-muted fw-bold small text-uppercase ls-1">Estimasi Total</label>
-                            <div class="bg-light-primary rounded-4 p-3 border border-primary border-opacity-10 text-end">
-                                <h3 class="fw-heading text-primary mb-0" id="displayTotal">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</h3>
-                            </div>
-                            {{-- Hidden Input untuk kirim ke Controller --}}
-                            <input type="hidden" name="total_price" id="realTotalPrice" value="{{ $transaction->total_price }}">
-                        </div>
+                                        <input type="hidden" id="promoType" value="{{ $transaction->promo->type }}">
+                                        <input type="hidden" id="promoValue" value="{{ $transaction->promo->value }}">
+                                        <input type="hidden" id="promoMax" value="{{ $transaction->promo->max_discount }}">
+                                        <input type="hidden" id="promoMinSpend" value="{{ $transaction->promo->min_spend }}">
+                                    </td>
+                                    <td class="pe-4 py-2 text-end fw-bold" id="displayDiscount">- Rp {{ number_format($transaction->discount_amount) }}</td>
+                                </tr>
+                                @endif
+                                {{-- Grand Total --}}
+                                <tr class="bg-light-primary bg-opacity-10">
+                                    <td colspan="2" class="text-end py-3 text-primary text-uppercase fw-bold">Total Tagihan</td>
+                                    <td class="pe-4 py-3 text-end fw-heading fs-5 text-primary" id="displayGrandTotal">Rp {{ number_format($transaction->total_price) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -88,15 +121,17 @@
                     <div class="row g-2">
                         @foreach([
                             'pending' => ['icon' => 'bi-clock', 'label' => 'Pending', 'color' => 'secondary'],
-                            'process' => ['icon' => 'bi-water', 'label' => 'Proses', 'color' => 'info'],
-                            'ready'   => ['icon' => 'bi-basket', 'label' => 'Selesai', 'color' => 'warning'],
-                            'done'    => ['icon' => 'bi-check-all', 'label' => 'Diambil', 'color' => 'success']
+                            'process' => ['icon' => 'bi-clipboard-check', 'label' => 'Diterima', 'color' => 'primary'],
+                            'washing' => ['icon' => 'bi-water', 'label' => 'Mencuci', 'color' => 'info'],
+                            'ironing' => ['icon' => 'bi-tropical-storm', 'label' => 'Setrika', 'color' => 'warning'],
+                            'ready'   => ['icon' => 'bi-bag-check', 'label' => 'Siap', 'color' => 'success'],
+                            'done'    => ['icon' => 'bi-check-all', 'label' => 'Selesai', 'color' => 'dark']
                         ] as $key => $meta)
-                        <div class="col-6 col-md-3">
+                        <div class="col-4 col-md-4 mb-2">
                             <input type="radio" class="btn-check status-radio" name="status" id="status_{{ $key }}" value="{{ $key }}" {{ $transaction->status == $key ? 'checked' : '' }}>
-                            <label class="btn btn-outline-light border border-light-subtle text-dark w-100 p-3 rounded-4 d-flex flex-column align-items-center justify-content-center gap-2 h-100 transition-300" for="status_{{ $key }}">
-                                <i class="bi {{ $meta['icon'] }} fs-4 {{ $transaction->status == $key ? 'text-white' : 'text-muted' }} icon-transition"></i>
-                                <span class="small fw-bold">{{ $meta['label'] }}</span>
+                            <label class="btn btn-outline-light border border-light-subtle text-dark w-100 p-2 rounded-4 d-flex flex-column align-items-center justify-content-center gap-1 h-100 transition-300" for="status_{{ $key }}">
+                                <i class="bi {{ $meta['icon'] }} fs-5 {{ $transaction->status == $key ? 'text-white' : 'text-muted' }} icon-transition"></i>
+                                <span class="small fw-bold" style="font-size: 0.7rem;">{{ $meta['label'] }}</span>
                             </label>
                         </div>
                         @endforeach
@@ -218,26 +253,75 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const weightInput = document.getElementById('weightInput');
-        const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
-        const displayTotal = document.getElementById('displayTotal');
-        const realTotalPrice = document.getElementById('realTotalPrice');
+        const qtyInputs = document.querySelectorAll('.qty-input');
+        const displaySubtotal = document.getElementById('displaySubtotal');
+        const displayDiscount = document.getElementById('displayDiscount');
+        const displayGrandTotal = document.getElementById('displayGrandTotal');
+        const realTotalPrice = document.getElementById('realTotalPrice'); // Input Hidden buat ke Server
+
+        // Ambil Data Promo (Jika Ada)
+        const promoType = document.getElementById('promoType') ? document.getElementById('promoType').value : null;
+        const promoValue = document.getElementById('promoValue') ? parseFloat(document.getElementById('promoValue').value) : 0;
+        const promoMax = document.getElementById('promoMax') ? parseFloat(document.getElementById('promoMax').value) : 0;
+        const promoMinSpend = document.getElementById('promoMinSpend') ? parseFloat(document.getElementById('promoMinSpend').value) : 0;
 
         function formatRupiah(number) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(number);
         }
 
         function calculate() {
-            let weight = parseFloat(weightInput.value);
-            if (isNaN(weight) || weight < 0) weight = 0;
+            let subtotal = 0;
 
-            const total = Math.ceil(weight * pricePerKg); 
+            // 1. Hitung Subtotal dari semua item
+            qtyInputs.forEach(input => {
+                let qty = parseFloat(input.value);
+                let price = parseFloat(input.getAttribute('data-price'));
+                
+                if (isNaN(qty) || qty < 0) qty = 0;
 
-            displayTotal.innerText = formatRupiah(total);
-            realTotalPrice.value = total;
+                // Update tampilan subtotal per baris
+                const rowTotal = qty * price;
+                input.closest('tr').querySelector('.item-subtotal').innerText = formatRupiah(rowTotal);
+
+                subtotal += rowTotal;
+            });
+
+            // 2. Hitung Diskon
+            let discount = 0;
+            if (promoType && subtotal >= promoMinSpend) {
+                if (promoType === 'percentage') {
+                    let rawDisc = subtotal * (promoValue / 100);
+                    if (promoMax > 0 && rawDisc > promoMax) {
+                        discount = promoMax;
+                    } else {
+                        discount = rawDisc;
+                    }
+                } else {
+                    discount = promoValue;
+                }
+                
+                if (discount > subtotal) discount = subtotal;
+            }
+
+            // 3. Grand Total
+            const grandTotal = subtotal - discount;
+
+            // Update UI
+            displaySubtotal.innerText = formatRupiah(subtotal);
+            if (displayDiscount) displayDiscount.innerText = '- ' + formatRupiah(discount);
+            displayGrandTotal.innerText = formatRupiah(grandTotal);
+
+            // PENTING: Update nilai input hidden agar terkirim ke server
+            if (realTotalPrice) realTotalPrice.value = grandTotal;
         }
 
-        weightInput.addEventListener('input', calculate);
+        // Pasang Event Listener ke setiap input
+        qtyInputs.forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // Jalankan perhitungan saat halaman pertama kali dimuat (Supaya angka langsung muncul)
+        calculate();
     });
 </script>
 

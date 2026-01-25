@@ -13,7 +13,7 @@
             </div>
 
             <div class="card-body p-4">
-                <form action="{{ route('services.update', $service->id) }}" method="POST">
+                <form action="{{ route('services.update', $service->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT') 
 
@@ -24,6 +24,21 @@
                             <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-tag-fill"></i></span>
                             <input type="text" name="name" class="form-control border-light shadow-sm bg-white" value="{{ $service->name }}" required>
                         </div>
+                    </div>
+
+                    {{-- Gambar Paket --}}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Gambar Paket</label>
+                        @if($service->image)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/' . $service->image) }}" alt="Current Image" class="img-thumbnail rounded" style="max-height: 150px;">
+                            </div>
+                        @endif
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-image"></i></span>
+                            <input type="file" name="image" class="form-control border-light shadow-sm bg-white" accept="image/*">
+                        </div>
+                        <div class="form-text small text-muted">Biarkan kosong jika tidak ingin mengubah gambar.</div>
                     </div>
                     
                     <div class="row g-4 mb-4">

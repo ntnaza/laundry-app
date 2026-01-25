@@ -40,7 +40,10 @@
                     <i class="bi bi-whatsapp"></i> <span class="d-none d-md-inline">Kirim WA</span>
                 </a>
                 <a href="{{ route('transactions.printThermal', $transaction->id) }}" target="_blank" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm hover-scale d-flex align-items-center gap-2">
-                    <i class="bi bi-printer"></i> <span class="d-none d-md-inline">Cetak Struk</span>
+                    <i class="bi bi-printer"></i> <span class="d-none d-md-inline">Struk</span>
+                </a>
+                <a href="{{ route('transactions.printInvoice', $transaction->id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-4 fw-bold shadow-sm hover-scale d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-pdf"></i> <span class="d-none d-md-inline">Invoice</span>
                 </a>
             </div>
         </div>
@@ -132,8 +135,13 @@
                         <p class="mb-1 text-muted text-uppercase" style="font-size: 0.7rem;">Pelanggan</p>
                         <h6 class="fw-bold text-dark">{{ $transaction->customer->name }}</h6>
                         <span class="d-block text-muted">{{ $transaction->customer->phone }}</span>
+                        <div class="mt-1">
+                            <span class="badge bg-warning text-dark border border-warning rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                <i class="bi bi-coin me-1"></i> {{ number_format($transaction->customer->points) }} Poin
+                            </span>
+                        </div>
                         @if($transaction->customer->address)
-                            <span class="d-block text-muted mt-1 fst-italic" style="font-size: 0.75rem; line-height: 1.2;">{{ Str::limit($transaction->customer->address, 40) }}</span>
+                            <span class="d-block text-muted mt-2 fst-italic" style="font-size: 0.75rem; line-height: 1.2;">{{ Str::limit($transaction->customer->address, 40) }}</span>
                         @endif
                     </div>
                 </div>
@@ -162,10 +170,27 @@
                             </tr>
                             @endforeach
                         </tbody>
-                        <tfoot class="bg-light-primary bg-opacity-10">
+                        <tfoot class="bg-light-primary bg-opacity-10 border-top">
+                            {{-- Subtotal --}}
                             <tr>
-                                <td colspan="3" class="text-end pt-3 pb-3 fw-bold text-uppercase small text-primary">Total Tagihan</td>
-                                <td class="text-end pe-3 pt-3 pb-3 fw-heading fs-5 text-primary">Rp {{ number_format($transaction->total_price) }}</td>
+                                <td colspan="3" class="text-end pt-3 pb-1 fw-bold text-uppercase small text-muted">Subtotal</td>
+                                <td class="text-end pe-3 pt-3 pb-1 fw-bold text-dark">Rp {{ number_format($transaction->subtotal) }}</td>
+                            </tr>
+
+                            {{-- Diskon (Tampil Jika Ada) --}}
+                            @if($transaction->discount_amount > 0)
+                            <tr>
+                                <td colspan="3" class="text-end py-1 fw-bold text-uppercase small text-danger">
+                                    Diskon {{ $transaction->promo ? '('.$transaction->promo->code.')' : '' }}
+                                </td>
+                                <td class="text-end pe-3 py-1 fw-bold text-danger">- Rp {{ number_format($transaction->discount_amount) }}</td>
+                            </tr>
+                            @endif
+
+                            {{-- Grand Total --}}
+                            <tr>
+                                <td colspan="3" class="text-end pt-1 pb-3 fw-bold text-uppercase small text-primary">Total Tagihan</td>
+                                <td class="text-end pe-3 pt-1 pb-3 fw-heading fs-5 text-primary">Rp {{ number_format($transaction->total_price) }}</td>
                             </tr>
                         </tfoot>
                     </table>

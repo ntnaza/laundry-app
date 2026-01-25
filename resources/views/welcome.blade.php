@@ -282,26 +282,69 @@
         </div>
     </section>
 
-    @if($bestPromo)
-    <section class="py-5">
+    @if($activePromos->count() > 0)
+    <section class="py-5 bg-light">
         <div class="container">
-            <div class="bg-primary rounded-4 p-5 text-white position-relative overflow-hidden shadow-lg" data-aos="zoom-in">
-                <div class="position-absolute rounded-circle bg-white opacity-10" style="width: 300px; height: 300px; top: -100px; right: -50px;"></div>
-                <div class="position-absolute rounded-circle bg-warning opacity-25" style="width: 100px; height: 100px; bottom: 20px; left: 50px; filter: blur(20px);"></div>
-                
-                <div class="row align-items-center position-relative z-1">
-                    <div class="col-lg-7">
-                        <span class="badge bg-warning text-dark mb-3">Promo Spesial</span>
-                        <h2 class="fw-bold mb-3 text-white">
-                            Diskon {{ $bestPromo->type == 'percentage' ? $bestPromo->value.'%' : 'Rp '.number_format($bestPromo->value/1000).'rb' }} Untukmu!
-                        </h2>
-                        <p class="opacity-75 mb-4">Gunakan kode voucher <strong>{{ $bestPromo->code }}</strong> saat melakukan pemesanan. {{ $bestPromo->end_date ? 'Berlaku sampai '.\Carbon\Carbon::parse($bestPromo->end_date)->format('d M') : 'Periode terbatas!' }}</p>
-                        <a href="{{ route('register') }}" class="btn btn-light text-primary rounded-pill px-4 fw-bold shadow-sm">
-                            Ambil Promo Sekarang
-                        </a>
-                    </div>
-                    <div class="col-lg-5 d-none d-lg-block text-end">
-                        <i class="bi bi-ticket-perforated text-white opacity-25" style="font-size: 10rem; margin-right: -20px;"></i>
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div id="promoCarousel" class="carousel slide rounded-4 overflow-hidden shadow-lg" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            @foreach($activePromos as $key => $promo)
+                                <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="{{ $key }}" class="{{ $key == 0 ? 'active' : '' }}" aria-current="{{ $key == 0 ? 'true' : 'false' }}" aria-label="Slide {{ $key + 1 }}"></button>
+                            @endforeach
+                        </div>
+                        <div class="carousel-inner">
+                            @foreach($activePromos as $key => $promo)
+                                <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
+                                    @if($promo->image)
+                                        {{-- Tampilan JIKA ADA GAMBAR --}}
+                                        <div class="position-relative" style="height: 400px;">
+                                            <img src="{{ asset('storage/' . $promo->image) }}" class="d-block w-100 h-100 object-fit-cover" alt="Promo {{ $promo->code }}">
+                                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 60%);">
+                                                <div class="px-5 text-white col-lg-6" data-aos="fade-right">
+                                                    <span class="badge bg-warning text-dark mb-3 animate__animated animate__fadeInDown">Promo Spesial</span>
+                                                    <h2 class="display-5 fw-bold mb-3">{{ $promo->type == 'percentage' ? 'Diskon '.$promo->value.'%' : 'Potongan Rp '.number_format($promo->value/1000).'rb' }}</h2>
+                                                    <p class="mb-4 lead">Gunakan kode: <span class="fw-bold text-warning font-monospace bg-dark px-2 rounded">{{ $promo->code }}</span></p>
+                                                    <p class="small opacity-75 mb-4">{{ $promo->end_date ? 'Berlaku s/d '.\Carbon\Carbon::parse($promo->end_date)->format('d M Y') : 'Periode Terbatas' }}</p>
+                                                    <a href="{{ route('register') }}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Ambil Sekarang</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- Tampilan JIKA TIDAK ADA GAMBAR (Fallback Gradient) --}}
+                                        <div class="bg-primary p-5 text-white position-relative overflow-hidden" style="height: 400px; display: flex; align-items: center;">
+                                            <div class="position-absolute rounded-circle bg-white opacity-10" style="width: 400px; height: 400px; top: -100px; right: -50px;"></div>
+                                            <div class="position-absolute rounded-circle bg-warning opacity-25" style="width: 150px; height: 150px; bottom: 20px; left: 50px; filter: blur(30px);"></div>
+                                            
+                                            <div class="row align-items-center position-relative z-1 w-100 m-0">
+                                                <div class="col-lg-7 ps-lg-5">
+                                                    <span class="badge bg-warning text-dark mb-3">Promo Spesial</span>
+                                                    <h2 class="display-4 fw-bold mb-3">
+                                                        {{ $promo->type == 'percentage' ? 'Diskon '.$promo->value.'%' : 'Hemat Rp '.number_format($promo->value/1000).'rb' }}
+                                                    </h2>
+                                                    <p class="opacity-75 mb-4 lead">Kode Voucher: <strong class="bg-white text-primary px-3 py-1 rounded font-monospace">{{ $promo->code }}</strong></p>
+                                                    <p class="small opacity-75 mb-4">{{ $promo->end_date ? 'Berlaku s/d '.\Carbon\Carbon::parse($promo->end_date)->format('d M Y') : 'Promo Selamanya!' }}</p>
+                                                    <a href="{{ route('register') }}" class="btn btn-light text-primary rounded-pill px-5 py-2 fw-bold shadow-sm">
+                                                        Ambil Promo
+                                                    </a>
+                                                </div>
+                                                <div class="col-lg-5 d-none d-lg-block text-center">
+                                                    <i class="bi bi-gift-fill text-white opacity-25" style="font-size: 12rem;"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
                 </div>
             </div>

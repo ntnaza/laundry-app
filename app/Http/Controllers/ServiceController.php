@@ -29,9 +29,16 @@ class ServiceController extends Controller
             'type' => 'required',
             'unit' => 'required',
             'estimate_duration' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        Service::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('services', 'public');
+        }
+
+        Service::create($data);
 
         return redirect()->route('services.index')->with('success', 'Paket berhasil ditambahkan!');
     }
@@ -51,9 +58,20 @@ class ServiceController extends Controller
             'type' => 'required',
             'unit' => 'required',
             'estimate_duration' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $service->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($service->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($service->image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($service->image);
+            }
+            $data['image'] = $request->file('image')->store('services', 'public');
+        }
+
+        $service->update($data);
 
         return redirect()->route('services.index')->with('success', 'Paket berhasil diupdate!');
     }
@@ -61,6 +79,11 @@ class ServiceController extends Controller
     // Hapus Data
     public function destroy(Service $service)
     {
+        // Hapus gambar jika ada
+        if ($service->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($service->image)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($service->image);
+        }
+        
         $service->delete();
         return redirect()->route('services.index')->with('success', 'Paket dihapus!');
     }

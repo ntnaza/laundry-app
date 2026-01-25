@@ -23,7 +23,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('promos.store') }}" method="POST">
+                <form action="{{ route('promos.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     {{-- KODE PROMO --}}
@@ -34,6 +34,16 @@
                             <input type="text" name="code" class="form-control border-light shadow-sm bg-white font-monospace text-uppercase fw-bold" placeholder="Cth: LEBARAN2026" required>
                         </div>
                         <div class="form-text small">Gunakan huruf kapital dan angka tanpa spasi.</div>
+                    </div>
+
+                    {{-- GAMBAR PROMO --}}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Gambar Banner (Opsional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-image"></i></span>
+                            <input type="file" name="image" class="form-control border-light shadow-sm bg-white" accept="image/*">
+                        </div>
+                        <div class="form-text small">Format: JPG, PNG. Ukuran ideal: 1200x600px.</div>
                     </div>
 
                     <div class="row g-4 mb-4">

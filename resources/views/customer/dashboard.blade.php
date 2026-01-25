@@ -4,6 +4,9 @@
 
 @section('content')
 
+{{-- Script Midtrans Simulator --}}
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
 {{-- HEADER MOBILE --}}
 <div class="d-md-none mb-4">
     <div class="d-flex justify-content-between align-items-center">
@@ -92,6 +95,24 @@
             </div>
         </div>
 
+        {{-- Point Reward Card --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden position-relative bg-dark text-white hover-top transition-300">
+            <div class="card-body p-4 position-relative z-1">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-warning text-dark rounded-circle shadow-sm box-center" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                        <i class="bi bi-coin"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-white mb-1">Poin Reward</h6>
+                        <h4 class="fw-bold text-warning mb-0">{{ number_format(Auth::user()->customer->points ?? 0) }} Poin</h4>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-top border-white border-opacity-10">
+                    <p class="mb-0 text-white opacity-75 small lh-sm">Kumpulkan poin dari setiap transaksimu!</p>
+                </div>
+            </div>
+        </div>
+
         {{-- Promo Card --}}
         <div class="card border-0 bg-primary bg-opacity-10 shadow-sm mb-4 rounded-4 overflow-hidden position-relative border border-primary border-opacity-10">
             <div class="card-body p-4 position-relative z-1">
@@ -135,11 +156,15 @@
                                     @if($order->status == 'pending') 
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill">Menunggu</span>
                                     @elseif($order->status == 'process') 
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">Sedang Dicuci</span>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill">Diterima</span>
+                                    @elseif($order->status == 'washing') 
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">Mencuci</span>
+                                    @elseif($order->status == 'ironing') 
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill">Setrika</span>
                                     @elseif($order->status == 'ready') 
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill">Siap Ambil</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">Siap Ambil</span>
                                     @elseif($order->status == 'done') 
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">Selesai</span>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border border-dark rounded-pill">Selesai</span>
                                     @endif
                                 </div>
                                 <div class="text-muted small">
@@ -164,14 +189,11 @@
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2">
                                             <i class="bi bi-check-circle-fill me-1"></i> Lunas
                                         </span>
-                                    @elseif($order->total_price > 0 && $order->payment_proof == null)
-                                        <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadModal{{ $order->id }}">
-                                            <i class="bi bi-upload me-1"></i> Bayar
+                                    {{-- Hanya boleh bayar jika status BUKAN pending (sudah ditimbang admin) --}}
+                                    @elseif($order->total_price > 0 && $order->status != 'pending')
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm hover-top" onclick="payOrder({{ $order->id }})">
+                                            <i class="bi bi-credit-card-2-front me-1"></i> Bayar Sekarang
                                         </button>
-                                    @elseif($order->payment_proof != null)
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 py-2">
-                                            <i class="bi bi-hourglass-split me-1"></i> Cek Admin
-                                        </span>
                                     @endif
 
                                     {{-- Tombol Review (Jika Selesai & Belum Review) --}}
@@ -186,43 +208,46 @@
                     </div>
                 </div>
 
-                {{-- MODAL REVIEW --}}
+                {{-- MODAL REVIEW REDESIGNED --}}
                 <div class="modal fade" id="reviewModal{{ $order->id }}" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content rounded-4 border-0 shadow-lg">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="modal-title fw-bold">Beri Ulasan</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form action="{{ route('customer.order.review', $order->id) }}" method="POST">
-                                @csrf
-                                <div class="modal-body text-center">
-                                    <p class="text-muted small">Bagaimana pengalaman laundry kamu?</p>
+                            <div class="modal-body text-center p-5">
+                                <div class="mb-4">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/148/148839.png" alt="Star" style="width: 80px; opacity: 0.8;">
+                                </div>
+                                <h4 class="fw-heading mb-2">Beri Rating Layanan</h4>
+                                <p class="text-muted small mb-4">Seberapa puas kamu dengan hasil cucian kami?</p>
+                                
+                                <form action="{{ route('customer.order.review', $order->id) }}" method="POST">
+                                    @csrf
                                     
-                                    <div class="rating-css">
-                                        <div class="star-icon">
-                                            @for($i=5; $i>=1; $i--)
-                                                <input type="radio" name="rate" id="rating{{$order->id}}-{{$i}}" value="{{$i}}" required>
-                                                <label for="rating{{$order->id}}-{{$i}}" class="bi bi-star-fill"></label>
-                                            @endfor
-                                        </div>
+                                    {{-- Star Rating Input --}}
+                                    <div class="rating-input d-flex justify-content-center flex-row-reverse gap-2 mb-4">
+                                        @for($i=5; $i>=1; $i--)
+                                            <input type="radio" name="rate" id="r{{$order->id}}-{{$i}}" value="{{$i}}" class="d-none peer" required>
+                                            <label for="r{{$order->id}}-{{$i}}" class="cursor-pointer text-muted fs-2 transition-300 peer-hover:text-warning peer-checked:text-warning">
+                                                <i class="bi bi-star-fill"></i>
+                                            </label>
+                                        @endfor
                                     </div>
 
-                                    <div class="mt-3 text-start">
-                                        <label class="form-label small fw-bold text-muted">Komentar</label>
-                                        <textarea name="content" class="form-control" rows="3" placeholder="Ceritakan kepuasanmu..." required></textarea>
+                                    <div class="form-floating mb-4">
+                                        <textarea name="content" class="form-control bg-light border-0 rounded-3" placeholder="Tulis komentar..." id="floatingTextarea2" style="height: 100px" required></textarea>
+                                        <label for="floatingTextarea2" class="text-muted small">Tulis pengalamanmu di sini...</label>
                                     </div>
-                                </div>
-                                <div class="modal-footer border-0 pt-0">
-                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Kirim Ulasan</button>
-                                </div>
-                            </form>
+
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-light w-50 rounded-pill fw-bold text-muted" data-bs-dismiss="modal">Nanti Saja</button>
+                                        <button type="submit" class="btn btn-primary w-50 rounded-pill fw-bold shadow-sm">Kirim</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- MODAL DETAIL ITEM --}}
+                {{-- MODAL DETAIL ITEM UPDATE --}}
                 <div class="modal fade" id="detailModal{{ $order->id }}" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -257,9 +282,22 @@
                                     @endforelse
                                 </ul>
 
-                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                    <span class="fw-bold text-dark">Total Tagihan</span>
-                                    <span class="fw-heading text-primary fs-5">Rp {{ number_format($order->total_price) }}</span>
+                                {{-- Rincian Biaya (Subtotal, Diskon, Total) --}}
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between mb-1 small text-muted">
+                                        <span>Subtotal</span>
+                                        <span>Rp {{ number_format($order->subtotal) }}</span>
+                                    </div>
+                                    @if($order->discount_amount > 0)
+                                        <div class="d-flex justify-content-between mb-2 small text-danger fw-bold">
+                                            <span>Diskon ({{ $order->promo->code ?? 'Voucher' }})</span>
+                                            <span>- Rp {{ number_format($order->discount_amount) }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <span class="fw-bold text-dark">Total Tagihan</span>
+                                        <span class="fw-heading text-primary fs-5">Rp {{ number_format($order->total_price) }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -317,6 +355,41 @@
         </div>
     </div>
 </div>
+
+<script>
+    function payOrder(orderId) {
+        // Panggil endpoint untuk dapat token
+        fetch(`/customer/order/${orderId}/pay`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    let msg = 'Error Midtrans: ' + data.error;
+                    if (data.debug_key_used) {
+                        msg += '\n(Key Used: ' + data.debug_key_used + ')';
+                    }
+                    alert(msg); 
+                } else if(data.snap_token) {
+                    snap.pay(data.snap_token, {
+                        onSuccess: function(result){
+                            location.reload(); 
+                        },
+                        onPending: function(result){
+                            alert("Menunggu pembayaran!");
+                        },
+                        onError: function(result){
+                            alert("Pembayaran gagal!");
+                        }
+                    });
+                } else {
+                    alert('Gagal mendapatkan token pembayaran (Token kosong).');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan sistem. Cek Console.');
+            });
+    }
+</script>
 
 <style>
     .hover-top:hover { transform: translateY(-3px); }

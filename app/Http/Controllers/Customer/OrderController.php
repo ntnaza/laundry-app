@@ -4,20 +4,31 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction; 
-use App\Models\Service; // [REVISI: Kita pakai Model Service yang sudah ada]
+use App\Models\Service;
 use App\Models\Customer;
 use App\Models\Testimonial;
-use App\Models\Promo; // <--- Import Model
+use App\Models\Promo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class OrderController extends Controller
 {
     public function index()
     {
+        $userId = Auth::id();
+        $userPhone = Auth::user()->phone;
+        $customerIds = Customer::where('phone', $userPhone)->pluck('id');
+
         $myOrders = Transaction::with(['details.service', 'testimonial'])
-                        ->where('user_id', Auth::id())
+                        ->where(function($query) use ($userId, $customerIds) {
+                            $query->where('app_user_id', $userId);
+                            if ($customerIds->isNotEmpty()) {
+                                $query->orWhereIn('customer_id', $customerIds);
+                            }
+                        })
                         ->latest()
                         ->get();
 
@@ -32,20 +43,18 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
             'phone'          => 'required|numeric', 
             'pickup_address' => 'required|string|max:255',
-            'delivery_type'  => 'required|in:pickup,delivery',
-            'promo_code'     => 'nullable|string|exists:promos,code', // Cek kode ada di DB
-            'latitude'       => 'nullable', 
-            'longitude'      => 'nullable',
-            'note'           => 'nullable|string|max:500'
+            'delivery_type'  => 'required|in:pickup,delivery,both,none',
+            'promo_code'     => 'nullable|string|exists:promos,code',
+            'items'          => 'required|array|min:1',
+            'items.*.service_id' => 'required|exists:services,id',
+            'items.*.qty'    => 'required|numeric|min:0.1'
         ]);
 
         try {
             DB::transaction(function () use ($request) {
-                // 2. Simpan/Cek Data Customer
                 $customer = Customer::firstOrCreate(
                     ['phone' => $request->phone], 
                     [
@@ -56,74 +65,123 @@ class OrderController extends Controller
                 
                 $customer->update(['address' => $request->pickup_address]);
 
-                // 3. Cek Promo ID (Diskon dihitung nanti sama admin saat nimbang)
+                $subtotal = 0;
+                $detailsData = []; 
+
+                foreach ($request->items as $item) {
+                    $service = Service::find($item['service_id']);
+                    $qty = $item['qty'];
+                    $price = $service->price;
+                    $itemSubtotal = $price * $qty;
+                    $subtotal += $itemSubtotal;
+                    $detailsData[] = [
+                        'service_id' => $service->id,
+                        'qty' => $qty,
+                        'price_per_unit' => $price,
+                        'subtotal' => $itemSubtotal
+                    ];
+                }
+
+                $discountAmount = 0;
                 $promoId = null;
                 if ($request->promo_code) {
                     $promo = Promo::where('code', $request->promo_code)->first();
-                    if ($promo && $promo->isValid()) {
+                    if ($promo && $promo->isValid() && $subtotal >= $promo->min_spend) {
                         $promoId = $promo->id;
+                        $discountRaw = ($promo->type == 'percentage') ? $subtotal * ($promo->value / 100) : $promo->value;
+                        $discountAmount = ($promo->max_discount && $discountRaw > $promo->max_discount) ? $promo->max_discount : $discountRaw;
+                        if ($discountAmount > $subtotal) $discountAmount = $subtotal;
                     }
                 }
+                $grandTotal = $subtotal - $discountAmount;
 
-                // 4. Gabung Note & Preferensi Layanan
-                $finalNote = $request->note;
-                if ($request->preferred_service) {
-                    $finalNote = "Request: " . $request->preferred_service . ". \nCatatan: " . $request->note;
-                }
-
-                // 5. Generate Invoice
                 do {
                     $invoice = 'TRX-' . mt_rand(10000, 99999);
                 } while (Transaction::where('invoice_code', $invoice)->exists());
 
-                // 6. Buat Transaksi
-                Transaction::create([
+                $transaction = Transaction::create([
                     'invoice_code'   => $invoice,
                     'customer_id'    => $customer->id,
-                    'user_id'        => Auth::id(), 
-                    'total_price'    => 0, 
+                    'app_user_id'    => Auth::id(),
+                    'total_price'    => $grandTotal,
+                    'subtotal'       => $subtotal,
+                    'discount_amount'=> $discountAmount,
                     'status'         => 'pending',         
                     'payment_status' => 'unpaid',  
-                    
                     'pickup_address' => $request->pickup_address,
-                    'latitude'       => $request->latitude,
-                    'longitude'      => $request->longitude,
-
                     'delivery_type'   => $request->delivery_type,
                     'delivery_status' => 'pending', 
-                    
-                    'note'     => $finalNote,
-                    'promo_id' => $promoId // Simpan Promo ID
+                    'note'     => $request->note,
+                    'promo_id' => $promoId
                 ]);
+
+                foreach ($detailsData as $detail) {
+                    $transaction->details()->create($detail);
+                }
             });
 
-            return redirect()->route('customer.dashboard')->with('success', 'Pesanan berhasil dibuat! Kurir akan segera meluncur.');
+            return redirect()->route('customer.dashboard')->with('success', 'Pesanan berhasil dibuat!');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
         }
     }
 
-    public function uploadProof(Request $request, $id)
+    public function pay($id)
     {
-        $request->validate([
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
-        ]);
+        $transaction = Transaction::where('app_user_id', Auth::id())->findOrFail($id);
 
-        $transaction = Transaction::where('user_id', Auth::id())->findOrFail($id);
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+        
+        $amount = (int) $transaction->total_price;
+        if ($amount < 100) $amount = 100;
+        
+        $phone = preg_replace('/[^0-9]/', '', $transaction->customer->phone);
+        if (empty($phone)) $phone = '08123456789';
 
-        if ($request->hasFile('payment_proof')) {
-            $file = $request->file('payment_proof');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('payment_proofs', $filename, 'public');
+        $params = [
+            'transaction_details' => [
+                'order_id' => $transaction->invoice_code . '-' . time(),
+                'gross_amount' => $amount,
+            ],
+            'customer_details' => [
+                'first_name' => substr($transaction->customer->name, 0, 20),
+                'phone' => $phone,
+            ],
+        ];
 
-            $transaction->update([
-                'payment_proof' => $path,
-                'payment_status' => 'waiting_confirmation' 
-            ]);
+        try {
+            $snapToken = Snap::getSnapToken($params);
+            $transaction->update(['snap_token' => $snapToken]);
+            return response()->json(['snap_token' => $snapToken]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage(), 'payload_sent' => $params], 500);
         }
+    }
 
-        return back()->with('success', 'Bukti transfer diterima! Tunggu admin cek ya.');
+    public function callback(Request $request)
+    {
+        $serverKey = config('midtrans.server_key');
+        $hashed = hash("sha512", $request->order_id.$request->status_code.$request->gross_amount.$serverKey);
+
+        if ($hashed == $request->signature_key) {
+            if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
+                $orderIdParts = explode('-', $request->order_id);
+                $invoiceCode = $orderIdParts[0] . '-' . $orderIdParts[1]; 
+                
+                $transaction = Transaction::where('invoice_code', $invoiceCode)->first();
+                if ($transaction) {
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $request->payment_type
+                    ]);
+                }
+            }
+        }
+        return response()->json(['status' => 'ok']);
     }
 
     public function storeReview(Request $request, $transactionId)
@@ -133,14 +191,10 @@ class OrderController extends Controller
             'content' => 'required|string|max:500'
         ]);
 
-        // Pastikan transaksi milik user login dan statusnya sudah done
-        $transaction = Transaction::where('user_id', Auth::id())
-                        ->where('status', 'done')
-                        ->findOrFail($transactionId);
+        $transaction = Transaction::where('user_id', Auth::id())->where('status', 'done')->findOrFail($transactionId);
 
-        // Cek apakah sudah pernah review
         if (Testimonial::where('transaction_id', $transaction->id)->exists()) {
-            return back()->with('error', 'Anda sudah memberikan ulasan untuk pesanan ini.');
+            return back()->with('error', 'Sudah diulas.');
         }
 
         Testimonial::create([
@@ -150,6 +204,6 @@ class OrderController extends Controller
             'content' => $request->content
         ]);
 
-        return back()->with('success', 'Terima kasih atas ulasannya! ⭐');
+        return back()->with('success', 'Terima kasih!');
     }
 }

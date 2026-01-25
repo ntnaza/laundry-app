@@ -156,11 +156,43 @@ class TransactionController extends Controller
             'payment_status' => 'required'
         ]);
 
+        // Cek status lama sebelum update
+        $oldStatus = $transaction->status;
+        $newStatus = $request->status;
+
         // 1. Update Tabel Transaksi
         $transaction->update([
-            'status' => $request->status,
+            'status' => $newStatus,
             'payment_status' => $request->payment_status
         ]);
+
+        // LOGIC POIN REWARD:
+        // Jika status berubah jadi 'done' DAN sebelumnya bukan 'done', maka kasih poin.
+        // Ini mencegah poin dobel kalau admin klik simpan berkali-kali di status 'done'.
+        if ($newStatus == 'done' && $oldStatus != 'done') {
+            // Hitung poin: Tiap kelipatan 10.000 dapat 1 poin
+            $pointsEarned = floor($transaction->total_price / 10000);
+            
+            if ($pointsEarned > 0) {
+                // Tambah poin ke customer
+                $transaction->customer->increment('points', $pointsEarned);
+                
+                // Opsional: Bisa tambah notifikasi flash message khusus
+                session()->flash('point_success', "Pelanggan mendapatkan +$pointsEarned Poin!");
+            }
+        }
+        
+        // KOREKSI POIN (Jika admin membatalkan 'done' kembali ke proses lain)
+        // Kita tarik lagi poinnya biar adil
+        if ($oldStatus == 'done' && $newStatus != 'done') {
+            $pointsToRevoke = floor($transaction->total_price / 10000);
+            if ($transaction->customer->points >= $pointsToRevoke) {
+                $transaction->customer->decrement('points', $pointsToRevoke);
+            } else {
+                // Kalau poin udah habis dipake (studi kasus lanjut), set ke 0 aja
+                $transaction->customer->update(['points' => 0]);
+            }
+        }
 
         // 2. Catat di Log (Biar ketahuan siapa yang ubah)
         // Pastikan Model TransactionLog sudah dibuat ya (di tahap awal)
@@ -180,6 +212,16 @@ class TransactionController extends Controller
         return view('admin.transactions.print_thermal', compact('transaction', 'setting'));
     }
 
+    // Cetak Invoice A4 Resmi
+    public function printInvoice(Transaction $transaction)
+    {
+        $setting = \App\Models\Setting::first();
+        // Load relasi biar datanya lengkap di view
+        $transaction->load(['details.service', 'customer', 'promo']);
+        
+        return view('admin.transactions.print_invoice', compact('transaction', 'setting'));
+    }
+
     public function edit($id)
     {
         // Ambil data transaksi dengan detail service
@@ -192,57 +234,84 @@ class TransactionController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'total_price' => 'required|numeric',
-            'weight' => 'nullable|numeric|min:0.1',
             'status' => 'required',
-            'delivery_status' => 'required' 
+            'delivery_status' => 'nullable', // Bisa null kalau delivery_type = none
+            'payment_status' => 'required',
+            'qty' => 'nullable|array', // Input qty (bisa berat atau jumlah pcs)
         ]);
 
-        $transaction = Transaction::with('details')->findOrFail($id);
+        $transaction = Transaction::with(['details.service', 'promo'])->findOrFail($id);
+        
+        // 1. HITUNG ULANG TOTAL (Berdasarkan Input Admin)
+        // Kita tidak menimpa service_id, hanya mengupdate Qty/Berat dari item yang sudah ada.
+        
+        $newSubtotal = 0;
 
-        // Logic Update atau Create Detail (Self-Healing & Auto Calc)
-        $finalTotalPrice = $request->total_price; // Default pakai input form
-
-        if ($request->has('weight')) {
-            $weight = $request->weight;
+        // Loop setiap detail transaksi yang ada
+        foreach ($transaction->details as $detail) {
+            // Ambil input qty baru dari form (name="qty[detail_id]")
+            // Jika tidak ada input (misal admin gak ubah), pakai qty lama
+            $newQty = $request->input('qty.' . $detail->id, $detail->qty);
             
-            if ($transaction->details->isEmpty()) {
-                // Buat baru
-                $defaultService = \App\Models\Service::first();
-                if ($defaultService) {
-                    $finalTotalPrice = $weight * $defaultService->price; // HITUNG DI BACKEND
-                    
-                    $transaction->details()->create([
-                        'service_id' => $defaultService->id,
-                        'qty' => $weight,
-                        'price_per_unit' => $defaultService->price,
-                        'subtotal' => $finalTotalPrice
-                    ]);
-                }
-            } else {
-                // Update detail
-                $detail = $transaction->details->first();
-                
-                // Pastikan harga paket pakai harga yang tersimpan di detail (history price) atau update ke harga terbaru service?
-                // Idealnya pakai harga detail (kontrak awal), tapi kalau mau revisi total, pakai harga detail.
-                $pricePerKg = $detail->price_per_unit;
-                $finalTotalPrice = $weight * $pricePerKg; // HITUNG DI BACKEND
+            // Validasi: Qty minimal 0.1 (buat berat) atau 1 (buat satuan)
+            if ($newQty <= 0) $newQty = $detail->qty;
 
-                $detail->update([
-                    'qty' => $weight,
-                    'subtotal' => $finalTotalPrice
-                ]);
+            // Hitung Subtotal Item
+            $itemSubtotal = $newQty * $detail->price_per_unit;
+            
+            // Update Data Detail di Database
+            $detail->update([
+                'qty' => $newQty,
+                'subtotal' => $itemSubtotal
+            ]);
+
+            $newSubtotal += $itemSubtotal;
+        }
+
+        // 2. HITUNG ULANG DISKON (Jika ada promo)
+        $discountAmount = 0;
+        if ($transaction->promo_id && $transaction->promo) {
+            $promo = $transaction->promo;
+            
+            // Cek lagi syarat min spend
+            if ($newSubtotal >= $promo->min_spend) {
+                if ($promo->type == 'percentage') {
+                    $discountRaw = $newSubtotal * ($promo->value / 100);
+                    $discountAmount = ($promo->max_discount && $discountRaw > $promo->max_discount) 
+                                      ? $promo->max_discount 
+                                      : $discountRaw;
+                } else {
+                    $discountAmount = $promo->value;
+                }
+                // Diskon gak boleh lebih gede dari subtotal
+                if ($discountAmount > $newSubtotal) $discountAmount = $newSubtotal;
+            } else {
+                // Kalau setelah edit ternyata totalnya jadi di bawah min_spend, diskon hangus
+                $discountAmount = 0;
             }
         }
 
-        // Update Transaksi Utama dengan hasil hitungan backend
+        $finalTotalPrice = $newSubtotal - $discountAmount;
+
+        // 3. UPDATE TRANSAKSI UTAMA
         $transaction->update([
+            'subtotal' => $newSubtotal, // Update subtotal baru
+            'discount_amount' => $discountAmount, // Update diskon baru
             'total_price' => $finalTotalPrice,
             'status' => $request->status,
-            'delivery_status' => $request->delivery_status,
+            'delivery_status' => $request->delivery_status ?? $transaction->delivery_status,
             'payment_status' => $request->payment_status,
-            'user_id' => auth()->id()
+            'user_id' => auth()->id() // Admin yang update
         ]);
+
+        // LOGIC POIN REWARD (Copy dari updateStatus biar konsisten)
+        // Jika status berubah jadi 'done', kasih poin.
+        if ($request->status == 'done' && $transaction->getOriginal('status') != 'done') {
+            $pointsEarned = floor($finalTotalPrice / 10000);
+            if ($pointsEarned > 0) {
+                $transaction->customer->increment('points', $pointsEarned);
+            }
+        }
 
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil diperbarui!');
     }

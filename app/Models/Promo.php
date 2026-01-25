@@ -18,7 +18,8 @@ class Promo extends Model
         'start_date',
         'end_date',
         'is_active',
-        'description'
+        'description',
+        'image'
     ];
 
     // Helper untuk cek apakah promo valid

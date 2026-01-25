@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         
+        // Exclude CSRF untuk Callback Midtrans
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/callback' 
+        ]);
+
         // DAFTAR MIDDLEWARE KITA DISINI
         $middleware->alias([
             // Middleware Role (yang sudah ada sebelumnya)

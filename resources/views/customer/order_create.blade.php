@@ -120,6 +120,16 @@
             </div>
         </div>
 
+        @if ($errors->any())
+            <div class="alert alert-danger border-0 rounded-4 mb-4 shadow-sm">
+                <ul class="mb-0 small">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('customer.order.store') }}" method="POST">
             @csrf
 
@@ -165,26 +175,74 @@
                     </div>
                 </div>
             </div>
-            {{-- 2.5. PREFERENSI LAYANAN & PROMO --}}
+            {{-- 2.5. ITEM LAUNDRY (SHOPPING CART STYLE) --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-basket-fill text-success d-flex" style="line-height:1;"></i> Detail Pesanan
+                        <i class="bi bi-basket-fill text-success d-flex" style="line-height:1;"></i> Detail Cucian
                     </h6>
 
-                    <div class="mb-3">
-                        <label class="form-label small text-muted fw-bold">ESTIMASI LAYANAN</label>
-                        <select name="preferred_service" class="form-select form-control-soft" style="background-image: none;">
-                            <option value="" selected disabled>-- Mau nyuci apa? --</option>
-                            @forelse($services as $service)
-                                <option value="{{ $service->name }}">
-                                    {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }} / {{ $service->unit }}
-                                </option>
-                            @empty
-                                <option value="Cuci Kiloan">Cuci Kiloan Regular</option>
-                            @endforelse
-                        </select>
+                    {{-- Form Tambah Item --}}
+                    <div class="bg-light p-3 rounded-3 mb-3 border">
+                        <label class="form-label small text-muted fw-bold">TAMBAH LAYANAN</label>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-7">
+                                <select id="serviceSelect" class="form-select form-control-soft">
+                                    <option value="" selected disabled>-- Pilih Layanan --</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}" 
+                                                data-name="{{ $service->name }}" 
+                                                data-price="{{ $service->price }}" 
+                                                data-unit="{{ $service->unit }}"
+                                                data-type="{{ $service->type }}">
+                                            {{ $service->name }} — Rp {{ number_format($service->price, 0, ',', '.') }} / {{ $service->unit }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-8 col-md-3">
+                                <div class="input-group">
+                                    <input type="number" id="qtyInput" class="form-control form-control-soft text-center" placeholder="Jml" min="1">
+                                    <span class="input-group-text bg-white border-start-0 text-muted small" id="unitLabel">Unit</span>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2">
+                                <button type="button" class="btn btn-success w-100 fw-bold form-control-soft" onclick="addItem()">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-text small text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i> Untuk Kiloan, masukkan estimasi berat (misal 1 Kg). Nanti akan ditimbang ulang oleh Admin.
+                        </div>
                     </div>
+
+                    {{-- Tabel Item Terpilih --}}
+                    <div class="table-responsive mb-3 rounded-3 border d-none" id="itemsTableContainer">
+                        <table class="table table-borderless table-striped mb-0 small">
+                            <thead class="bg-primary text-white">
+                                <tr>
+                                    <th class="ps-3">Layanan</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end pe-3">Subtotal</th>
+                                    <th style="width: 10px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsList">
+                                {{-- Item akan masuk sini via JS --}}
+                            </tbody>
+                            <tfoot class="border-top">
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold pt-3">Estimasi Total:</td>
+                                    <td class="text-end fw-bold text-primary pt-3 pe-3 fs-6" id="grandTotalDisplay">Rp 0</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {{-- Input Hidden untuk Data Item (Dikirim ke Controller) --}}
+                    <div id="hiddenInputsContainer"></div>
 
                     <div class="mb-3">
                         <label class="form-label small text-muted fw-bold">KODE PROMO (OPSIONAL)</label>
@@ -251,6 +309,120 @@
 </div>
 
 <script>
+    // --- 0. LOGIKA KERANJANG ITEM (SHOPPING CART) ---
+    let items = [];
+    const serviceSelect = document.getElementById('serviceSelect');
+    const qtyInput = document.getElementById('qtyInput');
+    const unitLabel = document.getElementById('unitLabel');
+    const itemsTableContainer = document.getElementById('itemsTableContainer');
+    const itemsList = document.getElementById('itemsList');
+    const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+    const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
+
+    // Update Label Satuan saat pilih layanan
+    serviceSelect.addEventListener('change', function() {
+        const option = this.options[this.selectedIndex];
+        if (option.dataset.unit) {
+            unitLabel.innerText = option.dataset.unit;
+        }
+    });
+
+    function formatRupiah(num) {
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
+    }
+
+    function addItem() {
+        const serviceId = serviceSelect.value;
+        const option = serviceSelect.options[serviceSelect.selectedIndex];
+        const qty = parseFloat(qtyInput.value);
+
+        if (!serviceId) {
+            alert('Pilih layanan dulu ya!');
+            return;
+        }
+        if (!qty || qty <= 0) {
+            alert('Masukkan jumlah atau estimasi berat!');
+            return;
+        }
+
+        const name = option.dataset.name;
+        const price = parseFloat(option.dataset.price);
+        const unit = option.dataset.unit;
+        const subtotal = price * qty;
+
+        // Cek apakah item sudah ada, kalau ada update qty
+        const existingItem = items.find(i => i.id === serviceId);
+        if (existingItem) {
+            existingItem.qty += qty;
+            existingItem.subtotal = existingItem.qty * price;
+        } else {
+            items.push({
+                id: serviceId,
+                name: name,
+                price: price,
+                qty: qty,
+                unit: unit,
+                subtotal: subtotal
+            });
+        }
+
+        renderItems();
+        
+        // Reset Input
+        serviceSelect.value = "";
+        qtyInput.value = "";
+        unitLabel.innerText = "Unit";
+    }
+
+    function removeItem(index) {
+        items.splice(index, 1);
+        renderItems();
+    }
+
+    function renderItems() {
+        itemsList.innerHTML = '';
+        hiddenInputsContainer.innerHTML = '';
+        let grandTotal = 0;
+
+        if (items.length > 0) {
+            itemsTableContainer.classList.remove('d-none');
+        } else {
+            itemsTableContainer.classList.add('d-none');
+        }
+
+        items.forEach((item, index) => {
+            grandTotal += item.subtotal;
+
+            // 1. Render Baris Tabel
+            const row = `
+                <tr>
+                    <td class="ps-3 align-middle">
+                        <div class="fw-bold text-dark">${item.name}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">@ ${formatRupiah(item.price)}</div>
+                    </td>
+                    <td class="text-center align-middle">${item.qty} ${item.unit}</td>
+                    <td class="text-end pe-3 align-middle fw-bold text-dark">${formatRupiah(item.subtotal)}</td>
+                    <td class="align-middle text-end pe-2">
+                        <button type="button" class="btn btn-link text-danger p-0" onclick="removeItem(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            itemsList.insertAdjacentHTML('beforeend', row);
+
+            // 2. Buat Input Hidden (Array) untuk dikirim ke Controller
+            // name="items[0][service_id]", name="items[0][qty]"
+            hiddenInputsContainer.insertAdjacentHTML('beforeend', `
+                <input type="hidden" name="items[${index}][service_id]" value="${item.id}">
+                <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+            `);
+        });
+
+        grandTotalDisplay.innerText = formatRupiah(grandTotal);
+    }
+
+
     // --- 1. LOGIKA PETA (Leaflet JS) ---
     // Lokasi Default (Misal: Bandung Kota) - Bisa disesuaikan dengan titik tengah area layanan laundry
     var defaultLat = -6.917464; 

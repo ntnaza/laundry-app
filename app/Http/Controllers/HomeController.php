@@ -24,14 +24,16 @@ class HomeController extends Controller
         // 3. Testimoni (Ambil 3 terbaru)
         $reviews = Testimonial::with('user')->latest()->take(3)->get();
 
-        // 4. Promo Terbaik (Untuk Banner)
-        $bestPromo = Promo::where('is_active', true)
-                        ->whereDate('end_date', '>=', now())
-                        ->orWhereNull('end_date') // Promo selamanya
-                        ->orderBy('value', 'desc')
-                        ->first();
+        // 4. Promo Aktif (Untuk Slider)
+        $activePromos = Promo::where('is_active', true)
+                        ->where(function ($query) {
+                            $query->whereDate('end_date', '>=', now())
+                                  ->orWhereNull('end_date');
+                        })
+                        ->latest()
+                        ->get();
         
-        return view('welcome', compact('services', 'totalCustomers', 'avgRating', 'reviews', 'bestPromo'));
+        return view('welcome', compact('services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos'));
     }
 
     // Fungsi Cek Resi
@@ -42,7 +44,14 @@ class HomeController extends Controller
         $totalCustomers = Customer::count();
         $avgRating = Testimonial::avg('rate') ?? 0;
         $reviews = Testimonial::with('user')->latest()->take(3)->get();
-        $bestPromo = Promo::where('is_active', true)->orderBy('value', 'desc')->first();
+        
+        $activePromos = Promo::where('is_active', true)
+                        ->where(function ($query) {
+                            $query->whereDate('end_date', '>=', now())
+                                  ->orWhereNull('end_date');
+                        })
+                        ->latest()
+                        ->get();
 
         // Cari Transaksi
         $tracking_result = Transaction::with('customer')
@@ -53,6 +62,6 @@ class HomeController extends Controller
             return redirect()->route('home')->with('error', 'Kode Invoice tidak ditemukan! Cek lagi ya.');
         }
 
-        return view('welcome', compact('tracking_result', 'services', 'totalCustomers', 'avgRating', 'reviews', 'bestPromo'));
+        return view('welcome', compact('tracking_result', 'services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos'));
     }
 }

@@ -113,7 +113,20 @@
         <div class="divider"></div>
 
         {{-- TOTAL HARGA --}}
-        <div class="d-flex fw-bold" style="font-size: 11pt; margin-bottom: 5px;">
+        <div class="header-info">
+            <div class="d-flex">
+                <span>Subtotal</span>
+                <span>{{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
+            </div>
+            @if($transaction->discount_amount > 0)
+            <div class="d-flex">
+                <span>Diskon ({{ $transaction->promo->code ?? 'Voucher' }})</span>
+                <span>-{{ number_format($transaction->discount_amount, 0, ',', '.') }}</span>
+            </div>
+            @endif
+        </div>
+
+        <div class="d-flex fw-bold" style="font-size: 11pt; margin-bottom: 5px; margin-top: 5px;">
             <span>TOTAL TAGIHAN</span>
             <span>{{ number_format($transaction->total_price, 0, ',', '.') }}</span>
         </div>

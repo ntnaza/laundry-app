@@ -39,9 +39,15 @@
                         {{-- Nama Paket --}}
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar rounded-circle bg-light-primary text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-basket-fill fs-5"></i>
-                                </div>
+                                @if($item->image)
+                                    <div class="avatar rounded-circle border overflow-hidden d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}" class="w-100 h-100 object-fit-cover">
+                                    </div>
+                                @else
+                                    <div class="avatar rounded-circle bg-light-primary text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-basket-fill fs-5"></i>
+                                    </div>
+                                @endif
                                 <div>
                                     <h6 class="fw-bold text-dark mb-0">{{ $item->name }}</h6>
                                 </div>
