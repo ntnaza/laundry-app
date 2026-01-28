@@ -15,8 +15,11 @@ class TransactionController extends Controller
     // Tampilkan Riwayat Transaksi
     public function index()
     {
-        // Ambil data transaksi terbaru dengan relasi customer & user
-        $transactions = Transaction::with(['customer', 'user'])->latest()->get();
+        // Ambil data transaksi terbaru (KECUALI DRAFT)
+        $transactions = Transaction::with(['customer', 'user'])
+                        ->where('status', '!=', 'draft') 
+                        ->latest()
+                        ->get();
         return view('admin.transactions.index', compact('transactions'));
     }
 
@@ -166,9 +169,23 @@ class TransactionController extends Controller
             'payment_status' => $request->payment_status
         ]);
 
-        // LOGIC POIN REWARD:
+        // --- A. LOGIC PENGURANGAN STOK (INVENTORY DEDUCTION) ---
+        // Trigger: Status berubah jadi 'process' (Mulai Cuci)
+        if ($newStatus == 'process' && $oldStatus != 'process') {
+            foreach ($transaction->details as $detail) {
+                // Ambil resep bahan baku dari layanan ini
+                foreach ($detail->service->materials as $material) {
+                    $qtyNeeded = $material->pivot->quantity * $detail->qty;
+                    
+                    // Kurangi Stok (Cek dulu cukup gak, kalau minus biarin minus atau error?)
+                    // Kita biarkan minus sebagai indikator 'Hutang Stok' biar proses gak macet
+                    $material->decrement('stock', $qtyNeeded);
+                }
+            }
+        }
+
+        // --- B. LOGIC POIN REWARD ---
         // Jika status berubah jadi 'done' DAN sebelumnya bukan 'done', maka kasih poin.
-        // Ini mencegah poin dobel kalau admin klik simpan berkali-kali di status 'done'.
         if ($newStatus == 'done' && $oldStatus != 'done') {
             // Hitung poin: Tiap kelipatan 10.000 dapat 1 poin
             $pointsEarned = floor($transaction->total_price / 10000);
@@ -177,32 +194,29 @@ class TransactionController extends Controller
                 // Tambah poin ke customer
                 $transaction->customer->increment('points', $pointsEarned);
                 
-                // Opsional: Bisa tambah notifikasi flash message khusus
-                session()->flash('point_success', "Pelanggan mendapatkan +$pointsEarned Poin!");
+                // Notifikasi Poin
+                session()->flash('success_point', "Status Selesai! Pelanggan dapat +$pointsEarned Poin ✨");
             }
         }
         
-        // KOREKSI POIN (Jika admin membatalkan 'done' kembali ke proses lain)
-        // Kita tarik lagi poinnya biar adil
+        // KOREKSI POIN (Rollback)
         if ($oldStatus == 'done' && $newStatus != 'done') {
             $pointsToRevoke = floor($transaction->total_price / 10000);
             if ($transaction->customer->points >= $pointsToRevoke) {
                 $transaction->customer->decrement('points', $pointsToRevoke);
             } else {
-                // Kalau poin udah habis dipake (studi kasus lanjut), set ke 0 aja
                 $transaction->customer->update(['points' => 0]);
             }
         }
 
-        // 2. Catat di Log (Biar ketahuan siapa yang ubah)
-        // Pastikan Model TransactionLog sudah dibuat ya (di tahap awal)
+        // 2. Catat di Log
         \App\Models\TransactionLog::create([
             'transaction_id' => $transaction->id,
             'status' => $request->status,
-            'user_id' => Auth::id() // Siapa yang klik
+            'user_id' => Auth::id()
         ]);
 
-        return redirect()->back()->with('success', 'Status cucian berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Status cucian diperbarui!');
     }
 
     public function printThermal(Transaction $transaction)
@@ -291,17 +305,55 @@ class TransactionController extends Controller
             }
         }
 
-        $finalTotalPrice = $newSubtotal - $discountAmount;
+        // PERBAIKAN: Tambahkan Delivery Fee ke Total Price
+        // Pastikan ongkir tidak hilang saat update
+        $deliveryFee = $transaction->delivery_fee ?? 0;
+        $finalTotalPrice = ($newSubtotal + $deliveryFee) - $discountAmount;
+
+        // --- LOGIKA STATUS PENGIRIMAN OTOMATIS (AUTO-PILOT) ---
+        $deliveryStatus = $request->delivery_status ?? $transaction->delivery_status;
+        $finalStatus = $request->status; // Tampung status pilihan admin
+        $oldStatus = $transaction->getOriginal('status'); // Ambil status lama
+        
+        // 1. Jika BERUBAH jadi 'process' -> Pickup Selesai
+        if ($request->status == 'process' && $oldStatus != 'process') {
+            $deliveryStatus = 'delivered'; 
+        }
+        // 2. Jika BERUBAH jadi 'ready' (Siap Antar) -> Reset Delivery jadi Pending (Cari Kurir Antar)
+        elseif ($request->status == 'ready' && $oldStatus != 'ready' && $transaction->delivery_type != 'pickup') {
+            $deliveryStatus = 'pending';
+        }
+        // 3. Jika 'done' (Selesai) -> Berarti Pengantaran Selesai
+        elseif ($request->status == 'done') {
+            $deliveryStatus = 'delivered';
+        }
+
+        // --- LOGIKA TERBALIK: KURIR SAMPAI -> OTOMATIS SELESAI ---
+        // Jika kurir diset 'Sampai Tujuan' saat fase pengantaran (Ready), otomatis 'Done'
+        if ($deliveryStatus == 'delivered' && $finalStatus == 'ready') {
+            $finalStatus = 'done';
+        }
+
+        // --- AUTO INVENTORY DEDUCTION (Saat Edit) ---
+        // Cek jika status berubah jadi 'process'
+        if ($finalStatus == 'process' && $oldStatus != 'process') {
+            foreach ($transaction->details as $detail) {
+                foreach ($detail->service->materials as $material) {
+                    $qtyNeeded = $material->pivot->quantity * $detail->qty;
+                    $material->decrement('stock', $qtyNeeded);
+                }
+            }
+        }
 
         // 3. UPDATE TRANSAKSI UTAMA
         $transaction->update([
-            'subtotal' => $newSubtotal, // Update subtotal baru
-            'discount_amount' => $discountAmount, // Update diskon baru
+            'subtotal' => $newSubtotal, 
+            'discount_amount' => $discountAmount, 
             'total_price' => $finalTotalPrice,
-            'status' => $request->status,
-            'delivery_status' => $request->delivery_status ?? $transaction->delivery_status,
+            'status' => $finalStatus, // Pakai variable finalStatus
+            'delivery_status' => $deliveryStatus, 
             'payment_status' => $request->payment_status,
-            'user_id' => auth()->id() // Admin yang update
+            'user_id' => auth()->id() 
         ]);
 
         // LOGIC POIN REWARD (Copy dari updateStatus biar konsisten)

@@ -14,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Exclude CSRF untuk Callback Midtrans
         $middleware->validateCsrfTokens(except: [
-            'midtrans/callback' 
+            'midtrans/callback',
+            '/midtrans/callback', // Tambah slash depan
+            'midtrans/*',         // Tambah wildcard biar aman
         ]);
 
         // DAFTAR MIDDLEWARE KITA DISINI

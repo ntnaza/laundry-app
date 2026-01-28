@@ -103,7 +103,12 @@
 
                             {{-- 4. Status Laundry --}}
                             <td class="px-4 py-3">
-                                @if($t->status == 'pending') 
+                                {{-- KONDISI KHUSUS: BARU BAYAR ONGKIR --}}
+                                @if($t->status == 'pending' && $t->details->isEmpty())
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold border border-warning shadow-sm blink">
+                                        <i class="bi bi-hourglass-split me-1"></i> Menunggu Customer
+                                    </span>
+                                @elseif($t->status == 'pending') 
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fw-bold">Menunggu</span>
                                 @elseif($t->status == 'process') 
                                     <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill fw-bold">Dicuci</span>
@@ -116,8 +121,8 @@
                             
                             {{-- 5. Total & Kasir --}}
                             <td class="px-4 py-3 text-end">
-                                @if($t->total_price == 0)
-                                    <span class="badge bg-light-danger text-danger border-0 rounded-pill px-2">Belum Timbang</span>
+                                @if($t->total_price == 0 || $t->details->isEmpty())
+                                    <span class="badge bg-light-danger text-danger border-0 rounded-pill px-2">Belum Timbang / Kosong</span>
                                 @else
                                     <h6 class="fw-bold text-dark mb-0">Rp {{ number_format($t->total_price, 0, ',', '.') }}</h6>
                                 @endif
@@ -140,14 +145,14 @@
                                     </a>
 
                                     {{-- Tombol Surat Jalan --}}
-                                    @if($t->delivery_type != 'none')
+                                    @if($t->delivery_type != 'none' && !$t->details->isEmpty())
                                         <a href="{{ route('transactions.printDelivery', $t->id) }}" target="_blank" class="btn btn-icon btn-light-secondary text-secondary rounded-circle box-center shadow-sm" style="width: 34px; height: 34px;" data-bs-toggle="tooltip" title="Surat Jalan">
                                             <i class="bi bi-truck"></i>
                                         </a>
                                     @endif
 
-                                    {{-- Tombol Proses / Edit (Selama belum selesai) --}}
-                                    @if($t->status != 'done')
+                                    {{-- Tombol Proses / Edit (Selama belum selesai & SUDAH ADA ITEM) --}}
+                                    @if($t->status != 'done' && !$t->details->isEmpty())
                                         <a href="{{ route('transactions.edit', $t->id) }}" class="btn btn-icon btn-light-warning text-warning rounded-circle box-center shadow-sm" style="width: 34px; height: 34px;" data-bs-toggle="tooltip" title="Proses / Edit Pesanan">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>

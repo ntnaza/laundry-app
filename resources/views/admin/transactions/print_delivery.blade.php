@@ -185,15 +185,83 @@
             </tbody>
         </table>
 
-        {{-- STATUS PEMBAYARAN (PENTING BUAT KURIR COD) --}}
-        <div style="margin-bottom: 30px;">
-            <div style="font-size: 10px; text-transform: uppercase; margin-bottom: 5px; font-weight: bold;">Status Tagihan (COD/Prepaid):</div>
-            @if($transaction->payment_status == 'paid')
-                <div class="status-badge" style="background: #eee;">LUNAS / SUDAH DIBAYAR</div>
-                <small style="margin-left: 10px;">* Jangan menagih ke pelanggan.</small>
+        {{-- RINCIAN KEUANGAN DETAIL --}}
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <div style="width: 60%; min-width: 300px;">
+                <table style="width: 100%; border: none;">
+                    {{-- Subtotal --}}
+                    <tr>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #666;">Total Harga Laundry:</td>
+                        <td style="padding: 2px 0; border: none; text-align: right; width: 120px; font-weight: 600;">Rp {{ number_format($transaction->subtotal) }}</td>
+                    </tr>
+                    
+                    {{-- Ongkir --}}
+                    <tr>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #666;">Biaya Antar-Jemput:</td>
+                        <td style="padding: 2px 0; border: none; text-align: right; font-weight: 600;">Rp {{ number_format($transaction->delivery_fee) }}</td>
+                    </tr>
+
+                    {{-- Diskon --}}
+                    @if($transaction->discount_amount > 0)
+                    <tr>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #dc3545;">
+                            Diskon {{ $transaction->promo ? '('.$transaction->promo->code.')' : '' }}:
+                        </td>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #dc3545; font-weight: 600;">- Rp {{ number_format($transaction->discount_amount) }}</td>
+                    </tr>
+                    @endif
+
+                    {{-- Garis Pemisah --}}
+                    <tr><td colspan="2" style="border-bottom: 1px solid #ddd; padding: 5px 0;"></td></tr>
+
+                    {{-- Grand Total (HITUNG ULANG REALTIME BIAR AKURAT) --}}
+                    @php
+                        $realTotal = ($transaction->subtotal + $transaction->delivery_fee) - $transaction->discount_amount;
+                    @endphp
+                    <tr>
+                        <td style="padding: 8px 0 2px; border: none; text-align: right; font-weight: bold;">TOTAL TAGIHAN:</td>
+                        <td style="padding: 8px 0 2px; border: none; text-align: right; font-weight: bold;">Rp {{ number_format($realTotal) }}</td>
+                    </tr>
+
+                    {{-- Sudah Dibayar --}}
+                    <tr>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #198754;">
+                            Sudah Dibayar (Transfer/DP):
+                            <div style="font-size: 9px; color: #888;">via {{ $transaction->payment_method == 'online' ? 'Midtrans/QRIS' : 'Manual/Cash' }}</div>
+                        </td>
+                        <td style="padding: 2px 0; border: none; text-align: right; color: #198754; font-weight: 600;">- Rp {{ number_format($transaction->paid_amount) }}</td>
+                    </tr>
+
+                    {{-- Garis Pemisah Tebal --}}
+                    <tr><td colspan="2" style="border-bottom: 2px solid #000; padding: 5px 0;"></td></tr>
+
+                    {{-- SISA TAGIHAN (FINAL) --}}
+                    @php $sisa = $realTotal - $transaction->paid_amount; @endphp
+                    <tr>
+                        <td style="padding: 10px 0; border: none; text-align: right; vertical-align: middle;">
+                            <span style="font-weight: 800; font-size: 14px; text-transform: uppercase;">SISA YANG HARUS DITAGIH:</span>
+                            @if($sisa > 0)
+                                <div style="font-size: 10px; color: #dc3545; font-style: italic;">*Wajib ditarik oleh kurir</div>
+                            @endif
+                        </td>
+                        <td style="padding: 10px 0; border: none; text-align: right; font-size: 18px; font-weight: 800; color: #000; vertical-align: middle;">
+                            Rp {{ number_format($sisa) }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {{-- STATUS BADGE BESAR --}}
+        <div style="margin-bottom: 30px; text-align: right;">
+            @if($sisa <= 100)
+                <div style="display: inline-block; padding: 10px 20px; background: #d1e7dd; color: #0f5132; border: 2px solid #0f5132; font-weight: 800; font-size: 16px; transform: rotate(-2deg); border-radius: 8px;">
+                    LUNAS / SUDAH DIBAYAR
+                </div>
             @else
-                <div class="status-badge" style="background: #000; color: #fff;">BELUM LUNAS (TAGIH RP {{ number_format($transaction->total_price) }})</div>
-                <small style="margin-left: 10px; font-weight: bold;">* Kurir wajib menagih pembayaran.</small>
+                <div style="display: inline-block; padding: 10px 20px; background: #fff3cd; color: #856404; border: 2px solid #856404; font-weight: 800; font-size: 16px; transform: rotate(-2deg); border-radius: 8px;">
+                    COD / BAYAR DITEMPAT
+                </div>
             @endif
         </div>
 

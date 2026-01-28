@@ -21,7 +21,10 @@ class SettingController extends Controller
             'shop_name' => 'required',
             'phone' => 'required',
             'address' => 'required',
-            'logo' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' // Validasi Gambar
+            'latitude' => 'nullable',
+            'longitude' => 'nullable',
+            'delivery_rate_per_km' => 'nullable|numeric',
+            'logo' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' 
         ]);
 
         $setting = Setting::first();

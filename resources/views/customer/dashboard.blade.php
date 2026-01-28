@@ -153,18 +153,38 @@
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                     <span class="fw-bold text-dark font-monospace">#{{ $order->invoice_code }}</span>
                                     
-                                    @if($order->status == 'pending') 
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill">Menunggu</span>
-                                    @elseif($order->status == 'process') 
-                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill">Diterima</span>
-                                    @elseif($order->status == 'washing') 
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">Mencuci</span>
-                                    @elseif($order->status == 'ironing') 
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill">Setrika</span>
-                                    @elseif($order->status == 'ready') 
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">Siap Ambil</span>
+                                    {{-- LOGIKA STATUS DETAILED --}}
+                                    @if($order->status == 'pending')
+                                        @if($order->delivery_status == 'on_the_way')
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill blink">
+                                                <i class="bi bi-scooter me-1"></i> Kurir Sedang Menjemput
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill">
+                                                <i class="bi bi-hourglass-split me-1"></i> Menunggu Kurir Jemput
+                                            </span>
+                                        @endif
+
+                                    @elseif($order->status == 'process' || $order->status == 'washing' || $order->status == 'ironing') 
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">
+                                            <i class="bi bi-shop me-1"></i> Sampai di Laundry / Dicuci
+                                        </span>
+
+                                    @elseif($order->status == 'ready')
+                                        @if($order->delivery_status == 'on_the_way')
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill blink">
+                                                <i class="bi bi-truck me-1"></i> Kurir Sedang Mengantar
+                                            </span>
+                                        @else
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill">
+                                                <i class="bi bi-box-seam me-1"></i> Selesai Cuci / Siap Antar
+                                            </span>
+                                        @endif
+
                                     @elseif($order->status == 'done') 
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border border-dark rounded-pill">Selesai</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Sampai Tujuan / Selesai
+                                        </span>
                                     @endif
                                 </div>
                                 <div class="text-muted small">
@@ -184,16 +204,32 @@
                                         Detail
                                     </button>
 
+                                    {{-- MODE RESUME: Sudah Bayar Ongkir, Tapi Belum Pilih Item --}}
+                                    @if($order->status == 'pending' && $order->details->count() == 0)
+                                        <a href="{{ route('customer.order.create', ['resume_id' => $order->id]) }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold shadow-sm hover-top text-dark">
+                                            <i class="bi bi-cart-plus me-1"></i> Lanjut Pilih Cucian
+                                        </a>
+
                                     {{-- Tombol Bayar / Status Bayar --}}
-                                    @if($order->payment_status == 'paid')
+                                    @elseif($order->payment_status == 'paid')
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2">
                                             <i class="bi bi-check-circle-fill me-1"></i> Lunas
                                         </span>
+                                    
                                     {{-- Hanya boleh bayar jika status BUKAN pending (sudah ditimbang admin) --}}
                                     @elseif($order->total_price > 0 && $order->status != 'pending')
-                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm hover-top" onclick="payOrder({{ $order->id }})">
-                                            <i class="bi bi-credit-card-2-front me-1"></i> Bayar Sekarang
-                                        </button>
+                                        
+                                        {{-- LOGIKA BARU: Cek Metode Bayar --}}
+                                        @if($order->payment_method == 'cash')
+                                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-3 py-2">
+                                                <i class="bi bi-cash-stack me-1"></i> Bayar Tunai (COD)
+                                            </span>
+                                        @else
+                                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm hover-top" onclick="payOrder({{ $order->id }})">
+                                                <i class="bi bi-credit-card-2-front me-1"></i> Bayar Sekarang
+                                            </button>
+                                        @endif
+
                                     @endif
 
                                     {{-- Tombol Review (Jika Selesai & Belum Review) --}}
@@ -359,7 +395,12 @@
 <script>
     function payOrder(orderId) {
         // Panggil endpoint untuk dapat token
-        fetch(`/customer/order/${orderId}/pay`)
+        fetch(`/customer/order/${orderId}/pay`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 if(data.error) {
@@ -406,5 +447,40 @@
     .rating-css input:checked + label ~ label { color: #b4b4b4; }
     .rating-css label:active { transform: scale(0.8); transition: 0.3s ease; }
 </style>
+
+{{-- NOTIFIKASI SUARA CUSTOMER --}}
+<audio id="custNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Simpan waktu load halaman (format YYYY-MM-DD HH:mm:ss)
+        // Kita butuh format yang dimengerti SQL atau Carbon
+        let lastCheck = '{{ now()->toDateTimeString() }}';
+        
+        setInterval(() => {
+            fetch(`{{ route('customer.check_status') }}?last_check=${lastCheck}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_update) {
+                    // Update timestamp biar gak bunyi terus (sebelum reload)
+                    lastCheck = data.timestamp;
+
+                    // 1. Mainkan Suara
+                    const audio = document.getElementById('custNotifSound');
+                    audio.play().catch(e => console.log('Autoplay blocked:', e));
+
+                    // 2. Tampilkan Notif
+                    alert(`🔔 UPDATE STATUS: Pesanan ${data.invoice} sekarang ${data.status.toUpperCase()}!`);
+                    
+                    // 3. Reload Halaman
+                    location.reload();
+                }
+            })
+            .catch(err => console.error('Polling Error:', err));
+        }, 10000); // Cek setiap 10 detik
+    });
+</script>
 
 @endsection

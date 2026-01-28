@@ -12,23 +12,27 @@ class Transaction extends Model
     // INI KUNCINYA KOH. 'note' HARUS ADA DI SINI.
     protected $fillable = [
         'invoice_code',
+        'snap_token',
         'customer_id',
         'user_id',
-        'app_user_id',     
+        'app_user_id',
         'total_price',
+        'subtotal',
+        'discount_amount',
+        'paid_amount', // Baru
+        'delivery_fee', // Baru
+        'distance', // Baru
+        'latitude', // Baru
+        'longitude', // Baru
         'status',
         'payment_status',
+        'payment_method',
+        'payment_proof',
         'pickup_address',
-        'latitude',
-        'longitude',
         'delivery_type',
         'delivery_status',
-        'payment_proof',
-        'snap_token', // <--- Baru
         'note',
-        'promo_id',        
-        'discount_amount', 
-        'subtotal'         
+        'promo_id'
     ];
 
     // Relasi ke Customer

@@ -97,8 +97,8 @@
         /* --- 4. MARQUEE / KERETA BERJALAN --- */
         .marquee-section { padding: 30px 0; background: #fff; border-bottom: 1px solid #f1f5f9; overflow: hidden; white-space: nowrap; }
         .marquee-content { display: inline-block; animation: scroll 30s linear infinite; }
-        .brand-logo { height: 35px; margin: 0 40px; opacity: 0.5; filter: grayscale(100%); transition: 0.3s; }
-        .brand-logo:hover { opacity: 1; filter: grayscale(0%); }
+        .brand-logo { height: 35px; margin: 0 40px; opacity: 1; filter: none; transition: 0.3s; }
+        .brand-logo:hover { transform: scale(1.1); }
 
         @keyframes scroll {
             0% { transform: translateX(0); }
@@ -226,18 +226,19 @@
 
     <section class="marquee-section">
         <div class="marquee-content">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" class="brand-logo" alt="Samsung">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg" class="brand-logo" alt="LG">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Unilever.svg/1200px-Unilever.svg.png" class="brand-logo" alt="Unilever">
-            <img src="https://logodownload.org/wp-content/uploads/2014/04/electrolux-logo-0.png" class="brand-logo" alt="Electrolux">
-            <img src="https://logos-world.net/wp-content/uploads/2020/04/Panasonic-Logo.png" class="brand-logo" alt="Panasonic">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/ISO_9001-2015.svg/1200px-ISO_9001-2015.svg.png" class="brand-logo" alt="ISO">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" class="brand-logo" alt="Samsung">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg" class="brand-logo" alt="LG">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Unilever.svg/1200px-Unilever.svg.png" class="brand-logo" alt="Unilever">
-            <img src="https://logodownload.org/wp-content/uploads/2014/04/electrolux-logo-0.png" class="brand-logo" alt="Electrolux">
-            <img src="https://logos-world.net/wp-content/uploads/2020/04/Panasonic-Logo.png" class="brand-logo" alt="Panasonic">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/ISO_9001-2015.svg/1200px-ISO_9001-2015.svg.png" class="brand-logo" alt="ISO">
+            <img src="https://www.vectorlogo.zone/logos/samsung/samsung-ar21.svg" class="brand-logo" alt="Samsung">
+            <img src="https://www.vectorlogo.zone/logos/lg/lg-ar21.svg" class="brand-logo" alt="LG">
+            <img src="https://www.vectorlogo.zone/logos/unilever/unilever-ar21.svg" class="brand-logo" alt="Unilever">
+            <img src="https://www.vectorlogo.zone/logos/panasonic/panasonic-ar21.svg" class="brand-logo" alt="Panasonic">
+            <img src="https://www.vectorlogo.zone/logos/electrolux/electrolux-ar21.svg" class="brand-logo" alt="Electrolux">
+            <img src="https://upload.wikimedia.org/wikipedia/id/thumb/1/1e/Rinso_logo.svg/200px-Rinso_logo.svg.png" class="brand-logo" alt="Rinso">
+            <img src="https://upload.wikimedia.org/wikipedia/id/thumb/a/a7/Logo_Molto.png/200px-Logo_Molto.png" class="brand-logo" alt="Molto">
+            <!-- Loop -->
+            <img src="https://www.vectorlogo.zone/logos/samsung/samsung-ar21.svg" class="brand-logo" alt="Samsung">
+            <img src="https://www.vectorlogo.zone/logos/lg/lg-ar21.svg" class="brand-logo" alt="LG">
+            <img src="https://www.vectorlogo.zone/logos/unilever/unilever-ar21.svg" class="brand-logo" alt="Unilever">
+            <img src="https://www.vectorlogo.zone/logos/panasonic/panasonic-ar21.svg" class="brand-logo" alt="Panasonic">
+            <img src="https://www.vectorlogo.zone/logos/electrolux/electrolux-ar21.svg" class="brand-logo" alt="Electrolux">
         </div>
     </section>
 
@@ -356,49 +357,73 @@
         <div class="container">
             <div class="text-center mb-5">
                 <small class="text-primary fw-bold text-uppercase ls-1">Cara Kerja</small>
-                <h2 class="display-6 mt-2">Semudah Memesan Ojek Online</h2>
+                <h2 class="display-6 mt-2">5 Langkah Mudah & Cepat</h2>
             </div>
 
-            <div class="row g-4">
-                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
-                    <div class="step-card">
-                        <span class="step-number">01</span>
-                        <div class="step-icon">
-                            <i class="bi bi-phone"></i>
-                        </div>
-                        <h5 class="fw-bold">Order via Web</h5>
-                        <p class="text-muted small mb-0">Pilih layanan dan atur jadwal penjemputan dari smartphone Anda.</p>
+            <div class="row g-4 justify-content-center">
+                <!-- Step 1 -->
+                <div class="col-6 col-md-2 text-center" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-icon mx-auto bg-white shadow-sm text-primary">
+                        <i class="bi bi-phone-vibrate"></i>
                     </div>
+                    <h6 class="fw-bold">1. Pesan & DP</h6>
+                    <p class="small text-muted lh-sm">Pilih layanan & bayar ongkir sebagai tanda jadi.</p>
                 </div>
-                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
-                    <div class="step-card">
-                        <span class="step-number">02</span>
-                        <div class="step-icon">
-                            <i class="bi bi-truck"></i>
-                        </div>
-                        <h5 class="fw-bold">Kurir Jemput</h5>
-                        <p class="text-muted small mb-0">Mitra kami akan datang ke lokasi untuk mengambil cucian kotor.</p>
-                    </div>
+                
+                <!-- Arrow -->
+                <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right fs-3 text-muted opacity-25"></i>
                 </div>
-                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
-                    <div class="step-card">
-                        <span class="step-number">03</span>
-                        <div class="step-icon">
-                            <i class="bi bi-water"></i>
-                        </div>
-                        <h5 class="fw-bold">Proses Cuci</h5>
-                        <p class="text-muted small mb-0">Dicuci terpisah, deterjen premium, dan disetrika uap anti bakteri.</p>
+
+                <!-- Step 2 -->
+                <div class="col-6 col-md-2 text-center" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-icon mx-auto bg-white shadow-sm text-warning">
+                        <i class="bi bi-truck"></i>
                     </div>
+                    <h6 class="fw-bold">2. Jemput</h6>
+                    <p class="small text-muted lh-sm">Kurir kami mengambil cucian kotor ke lokasi Anda.</p>
                 </div>
-                <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
-                    <div class="step-card">
-                        <span class="step-number">04</span>
-                        <div class="step-icon">
-                            <i class="bi bi-box-seam"></i>
-                        </div>
-                        <h5 class="fw-bold">Siap Antar</h5>
-                        <p class="text-muted small mb-0">Baju bersih dan wangi diantar kembali ke depan pintu rumah Anda.</p>
+
+                <!-- Arrow -->
+                <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right fs-3 text-muted opacity-25"></i>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="col-6 col-md-2 text-center" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-icon mx-auto bg-white shadow-sm text-info">
+                        <i class="bi bi-basket"></i>
                     </div>
+                    <h6 class="fw-bold">3. Timbang</h6>
+                    <p class="small text-muted lh-sm">Admin menimbang berat & update total tagihan.</p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right fs-3 text-muted opacity-25"></i>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="col-6 col-md-2 text-center" data-aos="fade-up" data-aos-delay="400">
+                    <div class="step-icon mx-auto bg-white shadow-sm text-success">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h6 class="fw-bold">4. Pelunasan</h6>
+                    <p class="small text-muted lh-sm">Cucian selesai, Anda lunasi sisa pembayaran.</p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                    <i class="bi bi-arrow-right fs-3 text-muted opacity-25"></i>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="col-6 col-md-2 text-center" data-aos="fade-up" data-aos-delay="500">
+                    <div class="step-icon mx-auto bg-white shadow-sm text-primary">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <h6 class="fw-bold">5. Antar</h6>
+                    <p class="small text-muted lh-sm">Baju bersih wangi diantar kembali ke rumah.</p>
                 </div>
             </div>
         </div>
@@ -415,18 +440,28 @@
                 @forelse($services as $service)
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card text-center p-4 d-flex flex-column">
-                        <h6 class="fw-bold text-dark mb-3">{{ $service->name }}</h6>
+                        
+                        {{-- THUMBNAIL LAYANAN --}}
+                        <div class="mb-3 rounded-4 overflow-hidden position-relative bg-light" style="height: 160px;">
+                            @if($service->image)
+                                <img src="{{ asset('storage/' . $service->image) }}" class="w-100 h-100 object-fit-cover" alt="{{ $service->name }}">
+                            @else
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25">
+                                    <i class="bi bi-basket-fill" style="font-size: 3rem;"></i>
+                                </div>
+                            @endif
+                            <span class="position-absolute top-0 end-0 badge bg-white text-dark shadow-sm m-2 border rounded-pill" style="font-size: 0.7rem;">
+                                <i class="bi bi-clock me-1"></i> {{ $service->estimate_duration }} Jam
+                            </span>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-2">{{ $service->name }}</h6>
                         <div class="d-flex justify-content-center align-items-baseline mb-3">
                             <span class="fs-5 fw-bold text-muted">Rp</span>
                             <span class="display-6 fw-bold text-primary mx-1">{{ number_format($service->price/1000) }}k</span>
                         </div>
                         <span class="badge bg-light text-muted rounded-pill mb-4 px-3 align-self-center">per {{ $service->unit }}</span>
                         
-                        <ul class="list-unstyled text-start small text-muted mb-4 opacity-75 flex-grow-1">
-                            <li class="mb-2 d-flex-center"><i class="bi bi-check2 text-primary me-2"></i>Cuci & Setrika Uap</li>
-                            <li class="mb-2 d-flex-center"><i class="bi bi-check2 text-primary me-2"></i>Deterjen Premium</li>
-                            <li class="mb-2 d-flex-center"><i class="bi bi-check2 text-primary me-2"></i>Estimasi {{ $service->estimate_duration }} Jam</li>
-                        </ul>
                         <a href="{{ route('login') }}" class="btn btn-outline-primary w-100 rounded-pill btn-sm fw-bold mt-auto">Pilih Paket</a>
                     </div>
                 </div>
@@ -529,6 +564,105 @@
         </div>
     </section>
 
+    <section id="faq" class="section-padding bg-white">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center mb-5">
+                        <small class="text-primary fw-bold text-uppercase ls-1">Tanya Jawab</small>
+                        <h2 class="display-6 mt-2">Sering Ditanyakan</h2>
+                    </div>
+
+                    <div class="accordion accordion-flush" id="accordionFAQ">
+                        <!-- FAQ 1 -->
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm bg-light overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold bg-light py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Berapa lama proses pencucian?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                                <div class="accordion-body px-4 pb-4 text-muted small">
+                                    Untuk layanan Reguler estimasi 24-48 jam. Kami juga menyediakan layanan <strong>Express (6 Jam)</strong> dan <strong>Kilat (3 Jam)</strong> dengan biaya tambahan.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm bg-light overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold bg-light py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Apakah deterjennya halal dan aman?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                                <div class="accordion-body px-4 pb-4 text-muted small">
+                                    Tentu! Kami menggunakan deterjen premium bersertifikat ramah lingkungan, anti-bakteri, dan wanginya tahan lama. Aman untuk kulit sensitif dan bayi.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm bg-light overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold bg-light py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Bagaimana jika pakaian hilang atau rusak?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                                <div class="accordion-body px-4 pb-4 text-muted small">
+                                    Keamanan adalah prioritas kami. Jika terjadi kehilangan atau kerusakan akibat kelalaian kami, kami memberikan <strong>garansi ganti rugi hingga 10x lipat</strong> biaya cuci.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm bg-light overflow-hidden">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold bg-light py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Apakah ada minimal order untuk antar-jemput?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                                <div class="accordion-body px-4 pb-4 text-muted small">
+                                    Ya, minimal transaksi untuk <strong>Gratis Ongkir</strong> adalah Rp 30.000. Di bawah itu akan dikenakan biaya jemput flat Rp 10.000 (area terjangkau).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="location" class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        @if($setting && $setting->latitude && $setting->longitude)
+                            <iframe 
+                                src="https://maps.google.com/maps?q={{ $setting->latitude }},{{ $setting->longitude }}&z=15&output=embed" 
+                                width="100%" 
+                                height="350" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy">
+                            </iframe>
+                        @else
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 350px;">
+                                <div class="text-center">
+                                    <i class="bi bi-geo-alt fs-1 text-muted opacity-25"></i>
+                                    <p class="text-muted small mt-2">Koordinat toko belum diatur.</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer>
         <div class="container">
             <div class="row gy-4">
@@ -537,34 +671,80 @@
                         <div class="bg-primary text-white rounded-circle d-flex-center justify-content-center" style="width: 32px; height: 32px;">
                             <i class="bi bi-basket-fill small"></i>
                         </div>
-                        <h6 class="fw-bold mb-0 text-dark">LaundryKuy</h6>
+                        <h6 class="fw-bold mb-0 text-dark">{{ $setting->shop_name ?? 'LaundryKuy' }}</h6>
                     </div>
                     <p class="text-muted small">Solusi laundry modern untuk generasi anti ribet. Bersih, wangi, dan tepat waktu.</p>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="#" class="btn btn-sm btn-light border rounded-circle"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm btn-light border rounded-circle"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm btn-light border rounded-circle"><i class="bi bi-tiktok"></i></a>
+                    </div>
                 </div>
                 <div class="col-6 col-lg-2">
                     <h6 class="fw-bold text-dark mb-3">Menu</h6>
                     <a href="#home" class="footer-link">Beranda</a>
                     <a href="#features" class="footer-link">Keunggulan</a>
                     <a href="#pricing" class="footer-link">Harga</a>
+                    <a href="#faq" class="footer-link">FAQ</a>
                 </div>
                 <div class="col-6 col-lg-2">
-                    <h6 class="fw-bold text-dark mb-3">Kontak</h6>
-                    <p class="small text-muted mb-1 d-flex-center"><i class="bi bi-whatsapp me-2"></i>0812-3456-7890</p>
-                    <p class="small text-muted d-flex-center"><i class="bi bi-geo-alt me-2"></i>Bandung, Indonesia</p>
+                    <h6 class="fw-bold text-dark mb-3">Layanan</h6>
+                    <a href="#" class="footer-link">Kiloan</a>
+                    <a href="#" class="footer-link">Satuan</a>
+                    <a href="#" class="footer-link">Cuci Sepatu</a>
+                    <a href="#" class="footer-link">Karpet & Bedcover</a>
                 </div>
                 <div class="col-lg-4">
-                    <h6 class="fw-bold text-dark mb-3">Berlangganan Info</h6>
-                    <form class="d-flex gap-2">
-                        <input type="email" class="form-control form-control-sm rounded-pill" placeholder="Email Anda...">
-                        <button class="btn btn-primary btn-sm rounded-pill px-3">Kirim</button>
-                    </form>
+                    <h6 class="fw-bold text-dark mb-3">Lokasi Workshop</h6>
+                    <p class="small text-muted mb-2"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>{{ $setting->address ?? 'Alamat belum diatur.' }}</p>
+                    <p class="small text-muted"><i class="bi bi-clock-fill me-2 text-primary"></i>Buka Setiap Hari: 07.00 - 21.00</p>
                 </div>
             </div>
             <div class="border-top mt-5 pt-4 text-center">
-                <small class="text-muted">&copy; 2026 LaundryKuy Inc. All rights reserved.</small>
+                <small class="text-muted">&copy; {{ date('Y') }} {{ $setting->shop_name ?? 'LaundryKuy' }} Inc. All rights reserved.</small>
             </div>
         </div>
     </footer>
+
+    <!-- FLOATING WHATSAPP -->
+    @php
+        $wa_number = $setting->phone ?? '6281234567890';
+        // Pastikan format diawali 62
+        if(str_starts_with($wa_number, '0')) {
+            $wa_number = '62' . substr($wa_number, 1);
+        }
+    @endphp
+    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $wa_number) }}?text=Halo%20{{ urlencode($setting->shop_name ?? 'LaundryKuy') }},%20saya%20mau%20tanya%20layanan%20laundry..." target="_blank" class="btn-float-wa d-flex align-items-center justify-content-center shadow-lg" data-bs-toggle="tooltip" title="Chat Kami via WA">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+
+    <style>
+        /* Floating WA Style */
+        .btn-float-wa {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #25D366;
+            color: white;
+            border-radius: 50%;
+            font-size: 30px;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            animation: pulse-wa 2s infinite;
+        }
+        .btn-float-wa:hover {
+            background-color: #128C7E;
+            transform: scale(1.1);
+            color: white;
+        }
+        @keyframes pulse-wa {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -582,4 +762,4 @@
         });
     </script>
 </body>
-</html>
+</html> 

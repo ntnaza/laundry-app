@@ -36,7 +36,7 @@ Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(fu
     
     // Dashboard & Radar Notifikasi
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/check-orders', [DashboardController::class, 'checkNewOrders'])->name('admin.check_orders'); // <--- INI PENTING BUAT NOTIF
+    Route::get('/check-new-orders', [DashboardController::class, 'checkNewOrders'])->name('check_new_orders'); // <--- Route Polling Admin
 
     // Operasional Harian
     Route::resource('transactions', TransactionController::class);
@@ -86,10 +86,12 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
 
     // Dashboard Pelanggan
     Route::get('/dashboard', [OrderController::class, 'index'])->name('dashboard');
+    Route::get('/check-status', [OrderController::class, 'checkStatus'])->name('check_status'); // <--- Route Polling Customer
 
     // Order & Maps
     Route::get('/order', [OrderController::class, 'create'])->name('order.create');
     Route::post('/order', [OrderController::class, 'store'])->name('order.store');
+    Route::post('/order/{id}/complete', [OrderController::class, 'complete'])->name('order.complete'); // <--- TAHAP 2 (Finalisasi)
     
     // Payment (Midtrans)
     Route::get('/order/{id}/pay', [OrderController::class, 'pay'])->name('order.pay'); // <--- Route Baru

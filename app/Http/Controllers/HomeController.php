@@ -33,7 +33,10 @@ class HomeController extends Controller
                         ->latest()
                         ->get();
         
-        return view('welcome', compact('services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos'));
+        // 5. Pengaturan Toko (Untuk Map & Kontak)
+        $setting = \App\Models\Setting::first();
+        
+        return view('welcome', compact('services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos', 'setting'));
     }
 
     // Fungsi Cek Resi
@@ -53,6 +56,8 @@ class HomeController extends Controller
                         ->latest()
                         ->get();
 
+        $setting = \App\Models\Setting::first();
+
         // Cari Transaksi
         $tracking_result = Transaction::with('customer')
                             ->where('invoice_code', $request->invoice_code)
@@ -62,6 +67,6 @@ class HomeController extends Controller
             return redirect()->route('home')->with('error', 'Kode Invoice tidak ditemukan! Cek lagi ya.');
         }
 
-        return view('welcome', compact('tracking_result', 'services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos'));
+        return view('welcome', compact('tracking_result', 'services', 'totalCustomers', 'avgRating', 'reviews', 'activePromos', 'setting'));
     }
 }

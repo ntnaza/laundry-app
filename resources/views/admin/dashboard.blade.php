@@ -228,4 +228,7 @@
     var chart = new ApexCharts(document.querySelector("#chart-pendapatan"), options);
     chart.render();
 </script>
-@endsection
+    <style>
+        .hover-scale:hover { transform: translateY(-2px); }
+    </style>
+    @endsection

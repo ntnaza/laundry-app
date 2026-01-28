@@ -139,25 +139,50 @@
                 </div>
             </div>
 
-            {{-- 3. STATUS LOGISTIK --}}
+            {{-- 3. STATUS LOGISTIK (DINAMIS SESUAI FASE) --}}
             @if($transaction->delivery_type != 'none')
             <div class="card border-0 shadow-soft rounded-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold text-dark mb-3 small text-uppercase ls-1">Status Pengiriman</h6>
+                    {{-- Tentukan Judul & Label berdasarkan Fase --}}
+                    @php
+                        $isPickupPhase = in_array($transaction->status, ['pending', 'process', 'washing', 'ironing']);
+                        $phaseTitle = $isPickupPhase ? 'Logistik Penjemputan (Pickup)' : 'Logistik Pengantaran (Delivery)';
+                        
+                        $labels = [
+                            'pending' => $isPickupPhase ? 'Cari Kurir Jemput' : 'Cari Kurir Antar',
+                            'on_the_way' => $isPickupPhase ? 'Kurir OTW Jemput' : 'Kurir OTW Antar',
+                            'delivered' => $isPickupPhase ? 'Sampai di Toko' : 'Sampai Tujuan'
+                        ];
+                    @endphp
+
+                    <h6 class="fw-bold text-dark mb-3 small text-uppercase ls-1">
+                        <i class="bi bi-truck me-2"></i> {{ $phaseTitle }}
+                    </h6>
+                    
                     <div class="row g-2">
                         @foreach([
-                            'pending'     => ['icon' => 'bi-search', 'label' => 'Cari Kurir'],
-                            'on_the_way'  => ['icon' => 'bi-scooter', 'label' => 'Sedang OTW'],
-                            'delivered'   => ['icon' => 'bi-geo-alt-fill', 'label' => 'Sampai']
+                            'pending'     => ['icon' => 'bi-search'],
+                            'on_the_way'  => ['icon' => 'bi-scooter'],
+                            'delivered'   => ['icon' => 'bi-geo-alt-fill']
                         ] as $key => $meta)
                         <div class="col-4">
                             <input type="radio" class="btn-check delivery-radio" name="delivery_status" id="del_{{ $key }}" value="{{ $key }}" {{ $transaction->delivery_status == $key ? 'checked' : '' }}>
                             <label class="btn btn-outline-light border border-light-subtle text-dark w-100 p-2 rounded-3 d-flex flex-column align-items-center justify-content-center gap-1 transition-300" for="del_{{ $key }}">
                                 <i class="bi {{ $meta['icon'] }} fs-6 text-muted"></i>
-                                <span class="small fw-medium" style="font-size: 0.75rem;">{{ $meta['label'] }}</span>
+                                <span class="small fw-bold" style="font-size: 0.7rem;">{{ $labels[$key] }}</span>
                             </label>
                         </div>
                         @endforeach
+                    </div>
+                    
+                    {{-- Info Tambahan --}}
+                    <div class="mt-3 small text-muted bg-light p-2 rounded border border-light-subtle">
+                        <i class="bi bi-info-circle me-1"></i>
+                        @if($isPickupPhase)
+                            Setelah barang sampai toko, ubah status pengerjaan jadi <strong>"Diterima"</strong>.
+                        @else
+                            Setelah barang sampai tujuan, ubah status pengerjaan jadi <strong>"Selesai"</strong>.
+                        @endif
                     </div>
                 </div>
             </div>

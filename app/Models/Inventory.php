@@ -17,4 +17,11 @@ class Inventory extends Model
         'price',
         'note'
     ];
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'service_materials')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
 }

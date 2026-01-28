@@ -13,56 +13,81 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. DATA KARTU ATAS (Ringkasan)
+        // Statistik Utama
         $totalTransactions = Transaction::count();
-        $totalCustomers = Customer::count();
-        $totalIncome = Transaction::where('payment_status', 'paid')->sum('total_price');
-        $todayIncome = Transaction::where('payment_status', 'paid')
-                        ->whereDate('created_at', Carbon::today())
-                        ->sum('total_price');
+        
+        // Income Today
+        $todayIncome = Transaction::whereDate('created_at', Carbon::today())->sum('total_price');
+        
+        // Income Month (Optional, kept for future use)
+        $incomeMonth = Transaction::whereMonth('created_at', Carbon::now()->month)->sum('total_price');
+        
+        // Total Income (Accumulated)
+        $totalIncome = Transaction::sum('total_price');
 
-        // 2. DATA GRAFIK (Pendapatan 7 Hari Terakhir)
-        // Kita loop 7 hari ke belakang
+        // Total Customers
+        $totalCustomers = Customer::count();
+        
+        // Transaksi Terbaru (Latest 5)
+        $latestTransactions = Transaction::with('customer')->latest()->take(5)->get();
+
+        // Chart Data (7 Hari Terakhir)
         $chartData = [];
         $chartCategories = [];
-
+        
         for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
+            $date = Carbon::today()->subDays($i);
+            $dailyIncome = Transaction::whereDate('created_at', $date)->sum('total_price');
             
-            // Hitung omset di tanggal tersebut
-            $income = Transaction::where('payment_status', 'paid')
-                        ->whereDate('created_at', $date)
-                        ->sum('total_price');
-            
-            $chartCategories[] = $date->format('d M'); // Label (Tgl)
-            $chartData[] = $income; // Data (Duit)
+            $chartData[] = $dailyIncome;
+            $chartCategories[] = $date->format('d M');
         }
 
-        // 3. TRANSAKSI TERBARU (5 Biji) buat tabel mini
-        $latestTransactions = Transaction::with('customer')->latest()->take(5)->get();
+        // Pass current server time for reliable polling
+        $serverTime = now()->toDateTimeString();
 
         return view('admin.dashboard', compact(
             'totalTransactions', 
-            'totalCustomers', 
+            'todayIncome', 
+            'incomeMonth', 
             'totalIncome', 
-            'todayIncome',
+            'totalCustomers',
+            'latestTransactions', 
             'chartData',
             'chartCategories',
-            'latestTransactions'
+            'serverTime'
         ));
     }
-    // Fungsi buat dipanggil sama JavaScript (AJAX)
-    public function checkNewOrders()
-    {
-        // Hitung orderan yang butuh kurir (delivery_status = pending)
-        // Dan status transaksinya masih pending (belum diproses)
-        $newOrders = \App\Models\Transaction::where('delivery_type', '!=', 'none')
-                        ->where('delivery_status', 'pending')
-                        ->where('status', 'pending')
-                        ->count();
 
-        return response()->json([
-            'new_orders' => $newOrders
-        ]);
+    public function checkNewOrders(Request $request)
+    {
+        // Gunakan timestamp untuk cek data baru (lebih akurat daripada ID)
+        $lastCheck = $request->query('last_check');
+        
+        if (!$lastCheck) {
+            return response()->json(['has_new' => false]);
+        }
+        
+        // REVISI LOGIC: HANYA NOTIFIKASI JIKA FASE 2 SELESAI (Sudah ada item/Subtotal > 0)
+        // Kita abaikan 'draft' kosong atau yang baru bayar DP doang.
+        $newOrder = Transaction::with('customer')
+                        ->where('updated_at', '>', $lastCheck)
+                        ->where('subtotal', '>', 0) // <--- KUNCI: Hanya order yang sudah ada isinya
+                        ->whereIn('status', ['pending', 'process']) // Pastikan statusnya sudah resmi (bukan draft awal, atau draft yg belum diproses)
+                        ->latest('updated_at')
+                        ->first();
+
+        if ($newOrder) {
+            return response()->json([
+                'has_new' => true,
+                'last_check' => now()->toDateTimeString(), // Update waktu cek
+                'invoice' => $newOrder->invoice_code,
+                'customer_name' => $newOrder->customer->name ?? 'Pelanggan Baru',
+                'total' => number_format($newOrder->total_price, 0, ',', '.'),
+                'status' => strtoupper($newOrder->status)
+            ]);
+        }
+
+        return response()->json(['has_new' => false]);
     }
 }
