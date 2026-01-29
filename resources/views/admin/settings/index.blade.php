@@ -45,6 +45,15 @@
                         </div>
                     </div>
 
+                    {{-- Jam Operasional --}}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Jam Operasional</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-light shadow-sm text-muted ps-3"><i class="bi bi-clock-history"></i></span>
+                            <input type="text" name="operating_hours" class="form-control border-light shadow-sm bg-white" value="{{ $setting->operating_hours }}" placeholder="Cth: 08:00 - 21:00 (Setiap Hari)" required>
+                        </div>
+                    </div>
+
                     {{-- Alamat --}}
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase ls-1">Alamat Lengkap</label>

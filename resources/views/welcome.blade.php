@@ -15,8 +15,8 @@
     <style>
         /* --- 1. SETTING VARIABEL & BASE FONT --- */
         :root {
-            --primary: #2563EB;     
-            --primary-dark: #1e40af;
+            --primary: #435ebe;     
+            --primary-dark: #374b9d;
             --dark: #0F172A;        
             --light: #F8FAFC;       
             --accent: #F59E0B;      
@@ -46,12 +46,17 @@
         /* Reset default line-height icon biar ga nambah spasi aneh */
         .bi {
             line-height: 1;
-            display: inline-block; /* Memastikan transform bekerja */
+            display: inline-flex; /* Ganti ke inline-flex agar align-items berfungsi internal */
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle; 
+            font-style: normal !important; /* Paksa NON-ITALIC */
         }
 
         /* Khusus untuk icon di dalam tombol atau badge */
         .btn .bi, .badge .bi {
-             transform: translateY(-1px); /* Koreksi mikro 1 pixel ke atas */
+             /* Hapus transform manual, biarkan flexbox yang mengatur */
+             transform: none; 
         }
 
 
@@ -79,7 +84,7 @@
         .btn-login { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
         .btn-login:hover { background: var(--primary); color: white; }
         .btn-signup { background: var(--primary); color: white; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-        .btn-signup:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-signup:hover { background: var(--primary-dark); color: white; transform: translateY(-1px); }
 
         /* --- 3. HERO SECTION --- */
         .hero { padding: 160px 0 80px; position: relative; overflow: hidden; }
@@ -207,7 +212,7 @@
                 
                 <div class="col-lg-6" data-aos="fade-left" data-aos-delay="100">
                     <div class="position-relative">
-                        <img src="https://images.unsplash.com/photo-1545173168-9f1947eebb8f?q=80&w=2071&auto=format&fit=crop" class="hero-img" alt="Laundry Service">
+                        <img src="https://images.unsplash.com/photo-1521566652839-697aa473761a?q=80&w=2071&auto=format&fit=crop" class="hero-img" alt="Laundry Service">
                         
                         <div class="position-absolute bg-white p-3 rounded-4 shadow-lg d-flex align-items-center gap-3 animate__animated animate__fadeInUp" style="bottom: 30px; left: -30px; border: 1px solid #f1f5f9;">
                             <div class="bg-light-success text-success p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -228,17 +233,18 @@
         <div class="marquee-content">
             <img src="https://www.vectorlogo.zone/logos/samsung/samsung-ar21.svg" class="brand-logo" alt="Samsung">
             <img src="https://www.vectorlogo.zone/logos/lg/lg-ar21.svg" class="brand-logo" alt="LG">
-            <img src="https://www.vectorlogo.zone/logos/unilever/unilever-ar21.svg" class="brand-logo" alt="Unilever">
-            <img src="https://www.vectorlogo.zone/logos/panasonic/panasonic-ar21.svg" class="brand-logo" alt="Panasonic">
-            <img src="https://www.vectorlogo.zone/logos/electrolux/electrolux-ar21.svg" class="brand-logo" alt="Electrolux">
-            <img src="https://upload.wikimedia.org/wikipedia/id/thumb/1/1e/Rinso_logo.svg/200px-Rinso_logo.svg.png" class="brand-logo" alt="Rinso">
-            <img src="https://upload.wikimedia.org/wikipedia/id/thumb/a/a7/Logo_Molto.png/200px-Logo_Molto.png" class="brand-logo" alt="Molto">
+            <img src="https://cdn.worldvectorlogo.com/logos/unilever-2.svg" class="brand-logo" alt="Unilever">
+            <img src="https://cdn.worldvectorlogo.com/logos/panasonic-1.svg" class="brand-logo" alt="Panasonic">
+            <img src="https://cdn.worldvectorlogo.com/logos/electrolux.svg" class="brand-logo" alt="Electrolux">
+            <img src="https://static.cdnlogo.com/logos/r/4/rinso.svg" class="brand-logo" alt="Rinso">
+            
             <!-- Loop -->
             <img src="https://www.vectorlogo.zone/logos/samsung/samsung-ar21.svg" class="brand-logo" alt="Samsung">
             <img src="https://www.vectorlogo.zone/logos/lg/lg-ar21.svg" class="brand-logo" alt="LG">
-            <img src="https://www.vectorlogo.zone/logos/unilever/unilever-ar21.svg" class="brand-logo" alt="Unilever">
-            <img src="https://www.vectorlogo.zone/logos/panasonic/panasonic-ar21.svg" class="brand-logo" alt="Panasonic">
-            <img src="https://www.vectorlogo.zone/logos/electrolux/electrolux-ar21.svg" class="brand-logo" alt="Electrolux">
+            <img src="https://cdn.worldvectorlogo.com/logos/unilever-2.svg" class="brand-logo" alt="Unilever">
+            <img src="https://cdn.worldvectorlogo.com/logos/panasonic-1.svg" class="brand-logo" alt="Panasonic">
+            <img src="https://cdn.worldvectorlogo.com/logos/electrolux.svg" class="brand-logo" alt="Electrolux">
+            <img src="https://static.cdnlogo.com/logos/r/4/rinso.svg" class="brand-logo" alt="Rinso">
         </div>
     </section>
 

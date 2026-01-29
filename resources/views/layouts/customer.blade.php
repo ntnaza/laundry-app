@@ -13,8 +13,8 @@
 
     <style>
         :root {
-            --primary: #2563EB;     
-            --primary-dark: #1e40af;
+            --primary: #435ebe;     
+            --primary-dark: #374b9d;
             --dark: #0F172A;        
             --light: #F8FAFC;       
         }

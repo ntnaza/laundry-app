@@ -33,7 +33,20 @@ class OrderController extends Controller
                         ->latest()
                         ->get();
 
-        return view('customer.dashboard', compact('myOrders'));
+        // AMBIL PROMO AKTIF
+        $activePromos = Promo::where('start_date', '<=', now())
+                            ->where(function($q) {
+                                $q->whereNull('end_date')
+                                  ->orWhere('end_date', '>=', now());
+                            })
+                            ->latest()
+                            ->limit(3) // Ambil 3 promo terbaru
+                            ->get();
+
+        // AMBIL SETTING (Jam Ops, WA, dll)
+        $setting = \App\Models\Setting::first();
+
+        return view('customer.dashboard', compact('myOrders', 'activePromos', 'setting'));
     }
 
     public function create(Request $request)
