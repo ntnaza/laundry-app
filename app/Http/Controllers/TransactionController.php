@@ -71,17 +71,18 @@ class TransactionController extends Controller
                 // 3. Cek Promo & Hitung Diskon
                 $discountAmount = 0;
                 $promoId = null;
+                $pointsRedeemed = 0;
+                $pointDiscount = 0;
 
+                // A. Hitung Promo Dulu
                 if ($request->promo_code) {
                     $promo = \App\Models\Promo::where('code', $request->promo_code)->first();
                     
-                    // Validasi Logis Promo
                     if ($promo && $promo->isValid() && $subtotal >= $promo->min_spend) {
                         $promoId = $promo->id;
                         
                         if ($promo->type == 'percentage') {
                             $discountRaw = $subtotal * ($promo->value / 100);
-                            // Cek Max Discount
                             if ($promo->max_discount && $discountRaw > $promo->max_discount) {
                                 $discountAmount = $promo->max_discount;
                             } else {
@@ -90,11 +91,44 @@ class TransactionController extends Controller
                         } else {
                             $discountAmount = $promo->value;
                         }
-
-                        // Pastikan diskon gak minus
-                        if ($discountAmount > $subtotal) $discountAmount = $subtotal;
                     }
                 }
+
+                // B. Hitung Tukar Poin (Redeem)
+                if ($request->has('use_points') && $request->use_points == '1') {
+                    $customer = Customer::findOrFail($request->customer_id);
+                    $currentPoints = $customer->points;
+                    
+                    if ($currentPoints > 0) {
+                        // Rate: 1 Poin = Rp 50
+                        $maxPointValue = $currentPoints * 50;
+                        
+                        // Sisa tagihan setelah kena promo
+                        $remainingBill = $subtotal - $discountAmount;
+                        if ($remainingBill < 0) $remainingBill = 0;
+
+                        // Tentukan berapa rupiah yang dipotong poin
+                        if ($maxPointValue >= $remainingBill) {
+                            $pointDiscount = $remainingBill; // Bayar Full pakai Poin
+                            $pointsRedeemed = ceil($remainingBill / 50); // Poin yang ditarik secukupnya aja
+                        } else {
+                            $pointDiscount = $maxPointValue; // Habisin semua poin
+                            $pointsRedeemed = $currentPoints;
+                        }
+
+                        // Tambahkan ke total diskon
+                        $discountAmount += $pointDiscount;
+
+                        // Kurangi Poin Pelanggan
+                        $customer->decrement('points', $pointsRedeemed);
+                        
+                        // Tambah catatan auto
+                        $request->merge(['note' => $request->note . " [Tukar $pointsRedeemed Poin: -Rp $pointDiscount]"]);
+                    }
+                }
+
+                // Pastikan diskon gak minus atau melebihi subtotal (Double Check)
+                if ($discountAmount > $subtotal) $discountAmount = $subtotal;
 
                 $grandTotal = $subtotal - $discountAmount;
 

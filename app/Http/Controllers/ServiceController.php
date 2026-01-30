@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Models\Inventory;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -17,7 +18,8 @@ class ServiceController extends Controller
     // Tampilkan Form Tambah
     public function create()
     {
-        return view('admin.services.create');
+        $inventories = Inventory::all();
+        return view('admin.services.create', compact('inventories'));
     }
 
     // Simpan Data ke Database
@@ -30,6 +32,9 @@ class ServiceController extends Controller
             'unit' => 'required',
             'estimate_duration' => 'required|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'materials' => 'nullable|array',
+            'materials.*.inventory_id' => 'required|exists:inventories,id',
+            'materials.*.quantity' => 'required|numeric|min:0',
         ]);
 
         $data = $request->all();
@@ -38,7 +43,16 @@ class ServiceController extends Controller
             $data['image'] = $request->file('image')->store('services', 'public');
         }
 
-        Service::create($data);
+        $service = Service::create($data);
+
+        // Simpan Resep Bahan Baku
+        if ($request->has('materials')) {
+            foreach ($request->materials as $material) {
+                if (isset($material['inventory_id']) && isset($material['quantity']) && $material['quantity'] > 0) {
+                    $service->materials()->attach($material['inventory_id'], ['quantity' => $material['quantity']]);
+                }
+            }
+        }
 
         return redirect()->route('services.index')->with('success', 'Paket berhasil ditambahkan!');
     }
@@ -46,7 +60,9 @@ class ServiceController extends Controller
     // Tampilkan Form Edit
     public function edit(Service $service)
     {
-        return view('admin.services.edit', compact('service'));
+        $inventories = Inventory::all();
+        $service->load('materials'); 
+        return view('admin.services.edit', compact('service', 'inventories'));
     }
 
     // Update Data
@@ -59,6 +75,7 @@ class ServiceController extends Controller
             'unit' => 'required',
             'estimate_duration' => 'required|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'materials' => 'nullable|array',
         ]);
 
         $data = $request->all();
@@ -72,6 +89,18 @@ class ServiceController extends Controller
         }
 
         $service->update($data);
+
+        // Update Resep Bahan Baku
+        $materialsData = [];
+        if ($request->has('materials')) {
+            foreach ($request->materials as $material) {
+                if (isset($material['inventory_id']) && isset($material['quantity']) && $material['quantity'] > 0) {
+                    // Gunakan ID Inventory sebagai key untuk sync
+                    $materialsData[$material['inventory_id']] = ['quantity' => $material['quantity']];
+                }
+            }
+        }
+        $service->materials()->sync($materialsData);
 
         return redirect()->route('services.index')->with('success', 'Paket berhasil diupdate!');
     }

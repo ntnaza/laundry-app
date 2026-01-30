@@ -37,10 +37,10 @@
                                 <div class="col-12">
                                     <label class="form-label text-muted small fw-bold">Pilih Pelanggan <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <select name="customer_id" class="form-select border-light bg-white shadow-sm" required style="border-radius: 0.5rem 0 0 0.5rem;">
-                                            <option value="">-- Cari Nama / No HP --</option>
+                                        <select name="customer_id" id="customerSelect" class="form-select border-light bg-white shadow-sm" required style="border-radius: 0.5rem 0 0 0.5rem;">
+                                            <option value="" data-points="0">-- Cari Nama / No HP --</option>
                                             @foreach($customers as $c)
-                                                <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->phone }})</option>
+                                                <option value="{{ $c->id }}" data-points="{{ $c->points ?? 0 }}">{{ $c->name }} ({{ $c->phone }})</option>
                                             @endforeach
                                         </select>
                                         <a href="{{ route('customers.index') }}" class="btn btn-primary px-3 d-flex align-items-center" style="border-radius: 0 0.5rem 0.5rem 0;" title="Tambah Pelanggan Baru">
@@ -49,6 +49,21 @@
                                     </div>
                                     <div class="form-text small">
                                         <i class="bi bi-info-circle me-1"></i> Pelanggan belum terdaftar? Klik tombol (+) di samping.
+                                    </div>
+
+                                    {{-- INFO POIN (Hidden by default) --}}
+                                    <div id="pointSection" class="mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded-3 d-none animate__animated animate__fadeIn">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-uppercase fw-bold text-warning ls-1">Poin Member</small>
+                                                <h5 class="fw-bold text-dark mb-0"><span id="pointDisplay">0</span> Poin</h5>
+                                                <small class="text-muted" style="font-size: 0.7rem;">Nilai Tukar: 1 Poin = Rp 50</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input fs-5" type="checkbox" role="switch" name="use_points" id="usePointsCheck" value="1">
+                                                <label class="form-check-label small fw-bold pt-1" for="usePointsCheck">Tukar Poin</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -147,6 +162,25 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
+        // Logika Tampil Poin
+        $('#customerSelect').change(function() {
+            const selectedOpt = $(this).find(':selected');
+            const points = parseInt(selectedOpt.data('points')) || 0;
+            const pointSection = $('#pointSection');
+            const pointDisplay = $('#pointDisplay');
+            const usePointsCheck = $('#usePointsCheck');
+
+            // Reset checkbox
+            usePointsCheck.prop('checked', false);
+
+            if (points > 0) {
+                pointDisplay.text(points);
+                pointSection.removeClass('d-none');
+            } else {
+                pointSection.addClass('d-none');
+            }
+        });
+
         const rowTemplate = `
             <tr class="border-bottom border-light-subtle animate__animated animate__fadeIn">
                 <td class="ps-4 py-3">

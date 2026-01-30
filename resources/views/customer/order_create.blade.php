@@ -58,11 +58,16 @@
     .btn-gradient-success:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); color: white; }
 </style>
 
+{{-- FORM WRAPPER UTAMA (Membungkus Row) --}}
+<form action="{{ $pendingTransaction ? route('customer.order.complete', $pendingTransaction->id) : route('customer.order.store') }}" method="POST" id="orderForm">
+@csrf
+<input type="hidden" id="transactionId" value="{{ $pendingTransaction->id ?? '' }}">
+
 <div class="row g-4">
     {{-- KOLOM KIRI: Peta, Alamat, Opsi (Scrollable) --}}
     <div class="col-lg-8">
         
-        <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4 mt-3">
             <a href="{{ route('customer.dashboard') }}" class="btn-back-custom"><i class="bi bi-arrow-left"></i></a>
             <div>
                 <h4 class="fw-heading mb-0">Buat Pesanan</h4>
@@ -70,7 +75,7 @@
             </div>
         </div>
 
-        {{-- Step Progress (Full Width di Mobile, Compact di Desktop) --}}
+        {{-- Step Progress --}}
         <div class="step-wrapper mb-5">
             <div class="step-item {{ !$pendingTransaction ? 'active' : '' }}" id="step1">
                 <div class="step-circle">1</div>
@@ -86,119 +91,116 @@
             </div>
         </div>
 
-        {{-- FORM UTAMA START --}}
-        <form action="{{ $pendingTransaction ? route('customer.order.complete', $pendingTransaction->id) : route('customer.order.store') }}" method="POST" id="orderForm">
-            @csrf
-            <input type="hidden" id="transactionId" value="{{ $pendingTransaction->id ?? '' }}">
+        {{-- 1. PETA & LOKASI --}}
+        @if(!$pendingTransaction)
+        <div class="card border-0 shadow-soft rounded-4 mb-4 overflow-hidden animate__animated animate__fadeInUp">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Titik Penjemputan</h6>
+                    <span class="badge bg-light-primary text-primary rounded-pill fw-bold">Wajib</span>
+                </div>
+                
+                <div id="map" style="height: 350px; border-radius: 20px; z-index: 1;" class="mb-3 border border-light"></div>
+                
+                <input type="hidden" name="latitude" id="lat">
+                <input type="hidden" name="longitude" id="lng">
+                <input type="hidden" name="distance" id="distanceInput">
+                <input type="hidden" name="delivery_fee" id="deliveryFeeInput">
 
-            {{-- 1. PETA & LOKASI --}}
-            @if(!$pendingTransaction)
-            <div class="card border-0 shadow-soft rounded-4 mb-4 overflow-hidden animate__animated animate__fadeInUp">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Titik Penjemputan</h6>
-                        <span class="badge bg-light-primary text-primary rounded-pill fw-bold">Wajib</span>
+                <div class="delivery-info-box" id="deliveryInfoBox">
+                    <div class="row align-items-center">
+                        <div class="col-6 border-end">
+                            <span class="small text-muted fw-bold d-block">ESTIMASI JARAK</span>
+                            <span class="fw-bold text-dark fs-5" id="distanceDisplay">0 KM</span>
+                        </div>
+                        <div class="col-6 ps-4">
+                            <span class="small text-muted fw-bold d-block">ONGKOS KIRIM</span>
+                            <span class="fw-heading text-primary fs-4" id="deliveryFeeDisplay">Rp 0</span>
+                        </div>
                     </div>
                     
-                    <div id="map" style="height: 350px; border-radius: 20px; z-index: 1;" class="mb-3 border border-light"></div>
-                    
-                    <input type="hidden" name="latitude" id="lat">
-                    <input type="hidden" name="longitude" id="lng">
-                    <input type="hidden" name="distance" id="distanceInput">
-                    <input type="hidden" name="delivery_fee" id="deliveryFeeInput">
+                    <div id="distanceWarning" class="alert alert-danger border-0 rounded-3 py-2 small fw-bold d-none mt-3">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Lokasi terlalu jauh (> 10KM).
+                    </div>
 
-                    <div class="delivery-info-box" id="deliveryInfoBox">
-                        <div class="row align-items-center">
-                            <div class="col-6 border-end">
-                                <span class="small text-muted fw-bold d-block">ESTIMASI JARAK</span>
-                                <span class="fw-bold text-dark fs-5" id="distanceDisplay">0 KM</span>
+                    <button type="button" class="btn btn-gradient-primary w-100 rounded-pill py-3 fw-bold shadow-lg mt-3" id="btnPayOngkir">
+                        <i class="bi bi-wallet2 me-2"></i> BAYAR ONGKIR SEKARANG
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- 2. ALAMAT & WA --}}
+        <div class="card border-0 shadow-soft rounded-4 mb-4 animate__animated animate__fadeInUp" id="contactSection">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Nomor WhatsApp</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0 fw-bold text-muted ps-3 rounded-start-4">+62</span>
+                            <input type="number" name="phone" class="form-control form-control-soft border-start-0 rounded-end-4" placeholder="812xxxx" value="{{ $pendingTransaction ? ($pendingTransaction->customer->phone ?? Auth::user()->phone) : (Auth::user()->phone ?? '') }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Metode Pengiriman</label>
+                        <div class="d-flex gap-2">
+                            <div class="selector-item">
+                                <input type="radio" name="delivery_type" id="dt2" value="both" {{ (!$pendingTransaction || $pendingTransaction->delivery_type == 'both') ? 'checked' : '' }}>
+                                <label for="dt2" class="selector-card py-2"><i class="bi bi-truck fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Delivery</span></label>
                             </div>
-                            <div class="col-6 ps-4">
-                                <span class="small text-muted fw-bold d-block">ONGKOS KIRIM</span>
-                                <span class="fw-heading text-primary fs-4" id="deliveryFeeDisplay">Rp 0</span>
+                            <div class="selector-item">
+                                <input type="radio" name="delivery_type" id="dt1" value="pickup" {{ ($pendingTransaction && $pendingTransaction->delivery_type == 'pickup') ? 'checked' : '' }}>
+                                <label for="dt1" class="selector-card py-2"><i class="bi bi-shop fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Ambil</span></label>
                             </div>
                         </div>
-                        
-                        <div id="distanceWarning" class="alert alert-danger border-0 rounded-3 py-2 small fw-bold d-none mt-3">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Lokasi terlalu jauh (> 10KM).
-                        </div>
-
-                        <button type="button" class="btn btn-gradient-primary w-100 rounded-pill py-3 fw-bold shadow-lg mt-3" id="btnPayOngkir">
-                            <i class="bi bi-wallet2 me-2"></i> BAYAR ONGKIR SEKARANG
-                        </button>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Alamat Lengkap</label>
+                        <textarea name="pickup_address" class="form-control form-control-soft" rows="2" placeholder="Detail lokasi..." required>{{ $pendingTransaction ? $pendingTransaction->pickup_address : '' }}</textarea>
                     </div>
                 </div>
             </div>
-            @endif
+        </div>
 
-            {{-- 2. ALAMAT & WA --}}
-            <div class="card border-0 shadow-soft rounded-4 mb-4 animate__animated animate__fadeInUp" id="contactSection">
+        {{-- 4. OPSI PEMBAYARAN & CATATAN --}}
+        {{-- FIX: Locked Section Logic (Only locked if NOT pendingTransaction) --}}
+        <div class="{{ $pendingTransaction ? '' : 'locked-section' }}" id="optionSectionWrapper">
+            @if(!$pendingTransaction) <div class="lock-overlay"></div> @endif
+            <div class="card border-0 shadow-soft rounded-4 mb-4" id="noteSection">
                 <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Nomor WhatsApp</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0 fw-bold text-muted ps-3 rounded-start-4">+62</span>
-                                <input type="number" name="phone" class="form-control form-control-soft border-start-0 rounded-end-4" placeholder="812xxxx" value="{{ $pendingTransaction ? ($pendingTransaction->customer->phone ?? Auth::user()->phone) : (Auth::user()->phone ?? '') }}" required>
+                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Metode Pembayaran</label>
+                            <div class="d-flex gap-2">
+                                <div class="selector-item">
+                                    <input type="radio" name="payment_method" id="pm1" value="online" checked>
+                                    <label for="pm1" class="selector-card py-2"><i class="bi bi-qr-code-scan fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">QRIS</span></label>
+                                </div>
+                                <div class="selector-item">
+                                    <input type="radio" name="payment_method" id="pm2" value="cash">
+                                    <label for="pm2" class="selector-card py-2"><i class="bi bi-cash-stack fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Tunai</span></label>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Metode Pengiriman</label>
-                            <div class="d-flex gap-2">
-                                <div class="selector-item">
-                                    <input type="radio" name="delivery_type" id="dt2" value="both" {{ (!$pendingTransaction || $pendingTransaction->delivery_type == 'both') ? 'checked' : '' }}>
-                                    <label for="dt2" class="selector-card py-2"><i class="bi bi-truck fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Delivery</span></label>
-                                </div>
-                                <div class="selector-item">
-                                    <input type="radio" name="delivery_type" id="dt1" value="pickup" {{ ($pendingTransaction && $pendingTransaction->delivery_type == 'pickup') ? 'checked' : '' }}>
-                                    <label for="dt1" class="selector-card py-2"><i class="bi bi-shop fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Ambil</span></label>
-                                </div>
-                            </div>
+                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Kode Promo</label>
+                            <input type="text" name="promo_code" class="form-control form-control-soft text-uppercase fw-bold" placeholder="Punya voucher?">
                         </div>
                         <div class="col-12">
-                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Alamat Lengkap</label>
-                            <textarea name="pickup_address" class="form-control form-control-soft" rows="2" placeholder="Detail lokasi..." required>{{ $pendingTransaction ? $pendingTransaction->pickup_address : '' }}</textarea>
+                            <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Catatan Tambahan</label>
+                            <textarea name="note" class="form-control form-control-soft" rows="2" placeholder="Catatan cuci...">{{ $pendingTransaction->note ?? '' }}</textarea>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {{-- 5. PROMO & CATATAN --}}
-            <div class="{{ $pendingTransaction ? '' : 'locked-section' }}" id="noteSectionWrapper">
-                @if(!$pendingTransaction) <div class="lock-overlay"></div> @endif
-                <div class="card border-0 shadow-soft rounded-4 mb-4" id="noteSection">
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Metode Pembayaran</label>
-                                <div class="d-flex gap-2">
-                                    <div class="selector-item">
-                                        <input type="radio" name="payment_method" id="pm1" value="online" checked>
-                                        <label for="pm1" class="selector-card py-2"><i class="bi bi-qr-code-scan fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">QRIS</span></label>
-                                    </div>
-                                    <div class="selector-item">
-                                        <input type="radio" name="payment_method" id="pm2" value="cash">
-                                        <label for="pm2" class="selector-card py-2"><i class="bi bi-cash-stack fs-5 mb-1"></i><span class="small fw-bold" style="font-size: 0.7rem;">Tunai</span></label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Kode Promo</label>
-                                <input type="text" name="promo_code" class="form-control form-control-soft text-uppercase fw-bold" placeholder="Punya voucher?">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Catatan Tambahan</label>
-                                <textarea name="note" class="form-control form-control-soft" rows="2" placeholder="Catatan cuci...">{{ $pendingTransaction->note ?? '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        </div>
 
     </div>
 
     {{-- KOLOM KANAN: ITEM & CHECKOUT (Sticky di Desktop) --}}
     <div class="col-lg-4">
+        {{-- FIX: Locked Section Logic --}}
         <div class="{{ $pendingTransaction ? '' : 'locked-section' }} position-sticky" style="top: 100px;" id="itemSectionWrapper">
             @if(!$pendingTransaction)
                 <div class="lock-overlay" id="lockOverlay1">
@@ -265,9 +267,8 @@
             </div>
         </div>
     </div>
-    {{-- TUTUP FORM --}}
-    </form>
 </div>
+</form> {{-- FORM UTAMA END (Wraps All Rows) --}}
 
 <script>
     const shopLat = {{ $setting->latitude ?? -6.200000 }};
@@ -325,7 +326,8 @@
     function renderItems() {
         const list = document.getElementById('itemsList'); const hidden = document.getElementById('hiddenInputsContainer');
         list.innerHTML = ""; hidden.innerHTML = ""; let total = 0;
-        document.getElementById('itemCount').innerText = items.length + " Item";
+        const countEl = document.getElementById('itemCount');
+        if (countEl) countEl.innerText = items.length + " Item";
         items.forEach((item, idx) => {
             total += item.subtotal;
             list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 bg-transparent service-item-row">

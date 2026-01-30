@@ -4,6 +4,9 @@
 @section('page-title', 'Edit Kode Promo')
 
 @section('content')
+<link rel="stylesheet" href="{{ asset('assets/extensions/flatpickr/flatpickr.min.css') }}">
+<script src="{{ asset('assets/extensions/flatpickr/flatpickr.min.js') }}"></script>
+
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card border-0 shadow-soft rounded-4 overflow-hidden">
@@ -119,6 +122,12 @@
             maxDisc.setAttribute('disabled', true);
             maxDisc.value = '';
         }
+    });
+
+    // Init Flatpickr
+    flatpickr("input[type=date]", {
+        dateFormat: "Y-m-d",
+        allowInput: true
     });
 </script>
 
