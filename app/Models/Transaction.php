@@ -32,13 +32,20 @@ class Transaction extends Model
         'delivery_type',
         'delivery_status',
         'note',
-        'promo_id'
+        'promo_id',
+        'courier_id'
     ];
 
     // Relasi ke Customer
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    // Relasi ke Driver/Kurir
+    public function courier()
+    {
+        return $this->belongsTo(User::class, 'courier_id');
     }
 
     // Relasi ke Promo

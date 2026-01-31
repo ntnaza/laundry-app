@@ -16,11 +16,15 @@ class TransactionController extends Controller
     public function index()
     {
         // Ambil data transaksi terbaru (KECUALI DRAFT)
-        $transactions = Transaction::with(['customer', 'user'])
+        $transactions = Transaction::with(['customer', 'user', 'courier']) // Tambah relation courier
                         ->where('status', '!=', 'draft') 
                         ->latest()
                         ->get();
-        return view('admin.transactions.index', compact('transactions'));
+        
+        // Ambil list driver aktif
+        $drivers = \App\Models\User::where('role', 'driver')->get();
+
+        return view('admin.transactions.index', compact('transactions', 'drivers'));
     }
 
     // Form Transaksi Baru
@@ -226,7 +230,10 @@ class TransactionController extends Controller
             
             if ($pointsEarned > 0) {
                 // Tambah poin ke customer
-                $transaction->customer->increment('points', $pointsEarned);
+                $transaction->load('customer');
+                if ($transaction->customer) {
+                    $transaction->customer->increment('points', $pointsEarned);
+                }
                 
                 // Notifikasi Poin
                 session()->flash('success_point', "Status Selesai! Pelanggan dapat +$pointsEarned Poin ✨");
@@ -236,10 +243,13 @@ class TransactionController extends Controller
         // KOREKSI POIN (Rollback)
         if ($oldStatus == 'done' && $newStatus != 'done') {
             $pointsToRevoke = floor($transaction->total_price / 10000);
-            if ($transaction->customer->points >= $pointsToRevoke) {
-                $transaction->customer->decrement('points', $pointsToRevoke);
-            } else {
-                $transaction->customer->update(['points' => 0]);
+            $transaction->load('customer');
+            if ($transaction->customer) {
+                if ($transaction->customer->points >= $pointsToRevoke) {
+                    $transaction->customer->decrement('points', $pointsToRevoke);
+                } else {
+                    $transaction->customer->update(['points' => 0]);
+                }
             }
         }
 
@@ -339,10 +349,9 @@ class TransactionController extends Controller
             }
         }
 
-        // PERBAIKAN: Tambahkan Delivery Fee ke Total Price
-        // Pastikan ongkir tidak hilang saat update
-        $deliveryFee = $transaction->delivery_fee ?? 0;
-        $finalTotalPrice = ($newSubtotal + $deliveryFee) - $discountAmount;
+        // PERBAIKAN: Jangan masukkan Delivery Fee ke Total Price (Sesuai request user)
+        // Ongkir dianggap terpisah atau sudah beres.
+        $finalTotalPrice = $newSubtotal - $discountAmount;
 
         // --- LOGIKA STATUS PENGIRIMAN OTOMATIS (AUTO-PILOT) ---
         $deliveryStatus = $request->delivery_status ?? $transaction->delivery_status;
@@ -395,7 +404,22 @@ class TransactionController extends Controller
         if ($request->status == 'done' && $transaction->getOriginal('status') != 'done') {
             $pointsEarned = floor($finalTotalPrice / 10000);
             if ($pointsEarned > 0) {
-                $transaction->customer->increment('points', $pointsEarned);
+                $transaction->load('customer'); // Load relasi
+                if ($transaction->customer) {
+                    $transaction->customer->increment('points', $pointsEarned);
+                }
+            }
+        }
+        // KOREKSI POIN (Rollback - Jika batal selesai)
+        elseif ($transaction->getOriginal('status') == 'done' && $request->status != 'done') {
+            $pointsToRevoke = floor($transaction->total_price / 10000);
+            $transaction->load('customer');
+            if ($transaction->customer) {
+                 if ($transaction->customer->points >= $pointsToRevoke) {
+                    $transaction->customer->decrement('points', $pointsToRevoke);
+                } else {
+                    $transaction->customer->update(['points' => 0]);
+                }
             }
         }
 
@@ -408,5 +432,19 @@ class TransactionController extends Controller
         $setting = \App\Models\Setting::first(); // Ambil data toko buat Kop Surat
 
         return view('admin.transactions.print_delivery', compact('transaction', 'setting'));
+    }
+
+    // Assign Kurir (Penugasan Driver)
+    public function assignCourier(Request $request, Transaction $transaction)
+    {
+        $request->validate([
+            'courier_id' => 'required|exists:users,id'
+        ]);
+
+        $transaction->update([
+            'courier_id' => $request->courier_id
+        ]);
+
+        return back()->with('success', 'Kurir berhasil ditugaskan! Pesanan akan muncul di aplikasi Driver.');
     }
 }

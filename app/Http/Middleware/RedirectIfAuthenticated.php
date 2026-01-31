@@ -27,6 +27,11 @@ class RedirectIfAuthenticated
                     // Kalau Customer -> Lempar ke Kandang Customer
                     return redirect()->route('customer.dashboard');
                 }
+                
+                if ($user->role === 'driver') {
+                    // Kalau Driver -> Lempar ke Tugas Driver
+                    return redirect()->route('driver.tasks');
+                }
 
                 // Kalau Admin/Owner/Staff -> Lempar ke Dashboard Admin
                 return redirect()->route('dashboard');

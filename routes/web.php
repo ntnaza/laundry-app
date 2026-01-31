@@ -44,6 +44,7 @@ Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(fu
     Route::get('/transactions/{transaction}/print-invoice', [TransactionController::class, 'printInvoice'])->name('transactions.printInvoice'); // <--- Route Baru
     Route::get('/transactions/{transaction}/print-delivery', [TransactionController::class, 'printDelivery'])->name('transactions.printDelivery');
     Route::put('/transactions/{transaction}/update-status', [TransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
+    Route::put('/transactions/{transaction}/assign-courier', [TransactionController::class, 'assignCourier'])->name('transactions.assignCourier'); // <--- Route Assign Kurir
     
     // Data Pelanggan & Profil Diri
     Route::resource('customers', CustomerController::class);
@@ -101,4 +102,15 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     
     // Kirim Review
     Route::post('/order/{id}/review', [OrderController::class, 'storeReview'])->name('order.review');
+});
+
+// 5. JALUR DRIVER (Kurir)
+Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->group(function () {
+    Route::get('/tasks', [\App\Http\Controllers\DriverController::class, 'index'])->name('tasks');
+    Route::get('/history', [\App\Http\Controllers\DriverController::class, 'history'])->name('history');
+    Route::put('/tasks/{id}/update', [\App\Http\Controllers\DriverController::class, 'updateStatus'])->name('updateStatus');
+    
+    // Akses Profile untuk Driver
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });

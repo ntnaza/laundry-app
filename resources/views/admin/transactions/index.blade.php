@@ -23,6 +23,7 @@
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1">Invoice</th>
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1">Pelanggan</th>
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1">Layanan</th>
+                            <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1">Kurir</th>
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1">Status</th>
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1 text-end">Total</th>
                             <th class="px-4 py-3 text-uppercase small fw-bold text-secondary border-0 ls-1 text-center">Aksi</th>
@@ -97,6 +98,64 @@
                                 @elseif($t->delivery_status == 'on_the_way')
                                     <div class="mt-2 badge bg-primary text-white rounded-pill border-0 shadow-sm">
                                         <i class="bi bi-scooter me-1"></i> Kurir OTW
+                                    </div>
+                                @endif
+                            </td>
+
+                            {{-- 4. Kurir (Assign Driver) --}}
+                            <td class="px-4 py-3">
+                                @if($t->delivery_type == 'none')
+                                    <span class="text-muted opacity-50">-</span>
+                                @else
+                                    @if($t->courier)
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="bg-light-primary text-primary rounded-circle box-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                                <b>{{ substr($t->courier->name, 0, 1) }}</b>
+                                            </div>
+                                            <div style="line-height: 1.2;">
+                                                <span class="fw-bold d-block text-dark small">{{ explode(' ', $t->courier->name)[0] }}</span>
+                                                <small class="text-muted" style="font-size: 0.65rem;">Driver</small>
+                                            </div>
+                                            <button type="button" class="btn btn-link text-muted p-0 ms-1" data-bs-toggle="modal" data-bs-target="#modalCourier{{ $t->id }}">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCourier{{ $t->id }}">
+                                            <i class="bi bi-person-plus-fill me-1"></i> Pilih
+                                        </button>
+                                    @endif
+
+                                    {{-- MODAL PILIH KURIR --}}
+                                    <div class="modal fade" id="modalCourier{{ $t->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                                            <div class="modal-content border-0 shadow-lg">
+                                                <form action="{{ route('transactions.assignCourier', $t->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h6 class="modal-title fw-bold">Tugaskan Kurir</h6>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted fw-bold">Pilih Driver Tersedia</label>
+                                                            <select name="courier_id" class="form-select">
+                                                                <option value="" disabled selected>-- Pilih --</option>
+                                                                @foreach($drivers as $driver)
+                                                                    <option value="{{ $driver->id }}" {{ $t->courier_id == $driver->id ? 'selected' : '' }}>
+                                                                        {{ $driver->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Simpan Penugasan</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 @endif
                             </td>

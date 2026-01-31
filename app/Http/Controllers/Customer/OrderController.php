@@ -220,7 +220,8 @@ class OrderController extends Controller
                     }
                 }
 
-                $grandTotal = ($subtotal + $transaction->delivery_fee) - $discountAmount;
+                // FIX: Jangan masukkan Delivery Fee lagi ke Grand Total (Ongkir dianggap sudah beres di awal)
+                $grandTotal = $subtotal - $discountAmount;
 
                 // LOGIKA RESET STATUS PEMBAYARAN
                 // Karena ada tambahan item, tagihan naik. Jadi status harus balik 'unpaid'.

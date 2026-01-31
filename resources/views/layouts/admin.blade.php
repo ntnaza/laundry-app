@@ -240,69 +240,87 @@
             <!-- Menu List -->
             <div class="sidebar-menu">
                 <ul class="list-unstyled mt-2">
-                    <li class="sidebar-title">Utama</li>
-                    <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <a href="{{ route('dashboard') }}" class="sidebar-link">
-                            <i class="bi bi-grid-fill"></i> <span>Overview</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item {{ request()->routeIs('transactions*') ? 'active' : '' }}">
-                        <a href="{{ route('transactions.index') }}" class="sidebar-link">
-                            <i class="bi bi-receipt"></i> <span>Transaksi</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item {{ request()->routeIs('customers*') ? 'active' : '' }}">
-                        <a href="{{ route('customers.index') }}" class="sidebar-link">
-                            <i class="bi bi-people-fill"></i> <span>Pelanggan</span>
-                        </a>
-                    </li>
+                    
+                    {{-- KHUSUS DRIVER / KURIR --}}
+                    @if(auth()->user()->role === 'driver')
+                        <li class="sidebar-title">Kurir Area</li>
+                        <li class="sidebar-item {{ request()->routeIs('driver.tasks') ? 'active' : '' }}">
+                            <a href="{{ route('driver.tasks') }}" class="sidebar-link">
+                                <i class="bi bi-truck"></i> <span>Tugas Saya</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item {{ request()->routeIs('driver.history') ? 'active' : '' }}">
+                            <a href="{{ route('driver.history') }}" class="sidebar-link">
+                                <i class="bi bi-clock-history"></i> <span>Riwayat</span>
+                            </a>
+                        </li>
 
-                    @if(auth()->user()->role !== 'staff')
-                        <li class="sidebar-title">Manajemen</li>
-                        <li class="sidebar-item {{ request()->routeIs('services*') ? 'active' : '' }}">
-                            <a href="{{ route('services.index') }}" class="sidebar-link">
-                                <i class="bi bi-basket2-fill"></i> <span>Paket Laundry</span>
+                    {{-- KHUSUS ADMIN, STAFF, OWNER --}}
+                    @else
+                        <li class="sidebar-title">Utama</li>
+                        <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                            <a href="{{ route('dashboard') }}" class="sidebar-link">
+                                <i class="bi bi-grid-fill"></i> <span>Overview</span>
                             </a>
                         </li>
-                        <li class="sidebar-item {{ request()->routeIs('promos*') ? 'active' : '' }}">
-                            <a href="{{ route('promos.index') }}" class="sidebar-link">
-                                <i class="bi bi-ticket-perforated-fill"></i> <span>Kode Promo</span>
+                        <li class="sidebar-item {{ request()->routeIs('transactions*') ? 'active' : '' }}">
+                            <a href="{{ route('transactions.index') }}" class="sidebar-link">
+                                <i class="bi bi-receipt"></i> <span>Transaksi</span>
                             </a>
                         </li>
-                        <li class="sidebar-item {{ request()->routeIs('inventories*') ? 'active' : '' }}">
-                            <a href="{{ route('inventories.index') }}" class="sidebar-link">
-                                <i class="bi bi-box-seam-fill"></i> <span>Stok Bahan</span>
+                        <li class="sidebar-item {{ request()->routeIs('customers*') ? 'active' : '' }}">
+                            <a href="{{ route('customers.index') }}" class="sidebar-link">
+                                <i class="bi bi-people-fill"></i> <span>Pelanggan</span>
                             </a>
                         </li>
-                        <li class="sidebar-item {{ request()->routeIs('reports.index') ? 'active' : '' }}">
-                            <a href="{{ route('reports.index') }}" class="sidebar-link">
-                                <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Laporan Omset</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item {{ request()->routeIs('reports.profit') ? 'active' : '' }}">
-                            <a href="{{ route('reports.profit') }}" class="sidebar-link">
-                                <i class="bi bi-pie-chart-fill"></i> <span>Laba Rugi</span>
-                            </a>
-                        </li>
-                    @endif
 
-                    @if(auth()->user()->role === 'owner')
-                        <li class="sidebar-title">Admin Zone</li>
-                        <li class="sidebar-item {{ request()->routeIs('expenses*') ? 'active' : '' }}">
-                            <a href="{{ route('expenses.index') }}" class="sidebar-link">
-                                <i class="bi bi-wallet-fill"></i> <span>Pengeluaran</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item {{ request()->routeIs('users*') ? 'active' : '' }}">
-                            <a href="{{ route('users.index') }}" class="sidebar-link">
-                                <i class="bi bi-shield-lock-fill"></i> <span>Users & Role</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item {{ request()->routeIs('settings*') ? 'active' : '' }}">
-                            <a href="{{ route('settings.index') }}" class="sidebar-link">
-                                <i class="bi bi-gear-fill"></i> <span>Pengaturan</span>
-                            </a>
-                        </li>
+                        @if(auth()->user()->role !== 'staff')
+                            <li class="sidebar-title">Manajemen</li>
+                            <li class="sidebar-item {{ request()->routeIs('services*') ? 'active' : '' }}">
+                                <a href="{{ route('services.index') }}" class="sidebar-link">
+                                    <i class="bi bi-basket2-fill"></i> <span>Paket Laundry</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('promos*') ? 'active' : '' }}">
+                                <a href="{{ route('promos.index') }}" class="sidebar-link">
+                                    <i class="bi bi-ticket-perforated-fill"></i> <span>Kode Promo</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('inventories*') ? 'active' : '' }}">
+                                <a href="{{ route('inventories.index') }}" class="sidebar-link">
+                                    <i class="bi bi-box-seam-fill"></i> <span>Stok Bahan</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('reports.index') ? 'active' : '' }}">
+                                <a href="{{ route('reports.index') }}" class="sidebar-link">
+                                    <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Laporan Omset</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('reports.profit') ? 'active' : '' }}">
+                                <a href="{{ route('reports.profit') }}" class="sidebar-link">
+                                    <i class="bi bi-pie-chart-fill"></i> <span>Laba Rugi</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if(auth()->user()->role === 'owner')
+                            <li class="sidebar-title">Admin Zone</li>
+                            <li class="sidebar-item {{ request()->routeIs('expenses*') ? 'active' : '' }}">
+                                <a href="{{ route('expenses.index') }}" class="sidebar-link">
+                                    <i class="bi bi-wallet-fill"></i> <span>Pengeluaran</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('users*') ? 'active' : '' }}">
+                                <a href="{{ route('users.index') }}" class="sidebar-link">
+                                    <i class="bi bi-shield-lock-fill"></i> <span>Users & Role</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item {{ request()->routeIs('settings*') ? 'active' : '' }}">
+                                <a href="{{ route('settings.index') }}" class="sidebar-link">
+                                    <i class="bi bi-gear-fill"></i> <span>Pengaturan</span>
+                                </a>
+                            </li>
+                        @endif
                     @endif
                 </ul>
             </div>

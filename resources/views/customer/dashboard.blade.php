@@ -189,9 +189,25 @@
 
                             {{-- Harga & Aksi (Dikembalikan Lengkap) --}}
                             <div class="col-12 col-md-auto text-md-end border-top border-md-0 pt-3 pt-md-0 mt-2 mt-md-0">
-                                <h6 class="fw-bold text-dark mb-1">
-                                    {{ $order->total_price == 0 ? '-' : 'Rp '.number_format($order->total_price) }}
-                                </h6>
+                                @php
+                                    // HITUNG MANUAL BIAR PASTI (Subtotal - Diskon)
+                                    // Abaikan total_price dari DB yang mungkin tercemar ongkir data lama
+                                    $realTotal = $order->subtotal - $order->discount_amount;
+                                    if($realTotal < 0) $realTotal = 0;
+                                @endphp
+
+                                @if($order->subtotal > 0)
+                                    @if($order->discount_amount > 0)
+                                        <small class="text-muted text-decoration-line-through d-block" style="font-size: 0.75rem;">
+                                            Rp {{ number_format($order->subtotal) }}
+                                        </small>
+                                    @endif
+                                    <h6 class="fw-bold text-primary mb-1">
+                                        Rp {{ number_format($realTotal) }}
+                                    </h6>
+                                @else
+                                    <h6 class="fw-bold text-muted mb-1">-</h6>
+                                @endif
                                 
                                 <div class="d-flex gap-2 justify-content-md-end mt-2">
                                     {{-- Tombol Detail --}}
@@ -298,6 +314,15 @@
                                         <span>Subtotal</span>
                                         <span>Rp {{ number_format($order->subtotal) }}</span>
                                     </div>
+                                    
+                                    {{-- TAMPILKAN ONGKIR (LUNAS) --}}
+                                    @if($order->delivery_fee > 0)
+                                        <div class="d-flex justify-content-between mb-1 small text-muted">
+                                            <span>Ongkos Kirim <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill" style="font-size: 0.6rem; padding: 2px 6px;">LUNAS</span></span>
+                                            <span>Rp {{ number_format($order->delivery_fee) }}</span>
+                                        </div>
+                                    @endif
+
                                     @if($order->discount_amount > 0)
                                         <div class="d-flex justify-content-between mb-2 small text-danger fw-bold">
                                             <span>Diskon ({{ $order->promo->code ?? 'Voucher' }})</span>
@@ -305,8 +330,10 @@
                                         </div>
                                     @endif
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                        <span class="fw-bold text-dark">Total Tagihan</span>
-                                        <span class="fw-heading text-primary fs-5">Rp {{ number_format($order->total_price) }}</span>
+                                        <span class="fw-bold text-dark">Total Tagihan Laundry</span>
+                                        <span class="fw-heading text-primary fs-4">
+                                            Rp {{ number_format($order->subtotal - $order->discount_amount) }}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="mt-4 d-grid gap-2">
