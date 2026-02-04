@@ -21,6 +21,27 @@ class LoginController extends Controller
     use AuthenticatesUsers;
 
     /**
+     * Show the application's login form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showLoginForm()
+    {
+        // Ambil 1 testimoni acak bintang >= 4
+        $testimonial = \App\Models\Testimonial::with('user')
+                        ->where('rate', '>=', 4)
+                        ->inRandomOrder()
+                        ->first();
+
+        return view('auth.login', compact('testimonial'));
+    }
+
+    protected function credentials(Request $request)
+    {
+        return array_merge($request->only($this->username(), 'password'), ['is_active' => 1]);
+    }
+
+    /**
      * Where to redirect users after login.
      *
      * @var string

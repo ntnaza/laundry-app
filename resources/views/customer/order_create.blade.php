@@ -4,6 +4,10 @@
 
 @section('content')
 
+@php
+    $customerProfile = \App\Models\Customer::where('user_id', Auth::id())->first();
+@endphp
+
 {{-- Midtrans Snap JS --}}
 <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
 
@@ -139,7 +143,7 @@
                         <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Nomor WhatsApp</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0 fw-bold text-muted ps-3 rounded-start-4">+62</span>
-                            <input type="number" name="phone" class="form-control form-control-soft border-start-0 rounded-end-4" placeholder="812xxxx" value="{{ $pendingTransaction ? ($pendingTransaction->customer->phone ?? Auth::user()->phone) : (Auth::user()->phone ?? '') }}" required>
+                            <input type="number" name="phone" class="form-control form-control-soft border-start-0 rounded-end-4" placeholder="812xxxx" value="{{ $customerProfile->phone ?? ($pendingTransaction ? $pendingTransaction->customer->phone : '') }}" required>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -157,7 +161,7 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label small text-muted fw-bold ls-1 text-uppercase">Alamat Lengkap</label>
-                        <textarea name="pickup_address" class="form-control form-control-soft" rows="2" placeholder="Detail lokasi..." required>{{ $pendingTransaction ? $pendingTransaction->pickup_address : '' }}</textarea>
+                        <textarea name="pickup_address" class="form-control form-control-soft" rows="2" placeholder="Detail lokasi..." required>{{ $customerProfile->address ?? ($pendingTransaction ? $pendingTransaction->pickup_address : '') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -271,20 +275,54 @@
 </form> {{-- FORM UTAMA END (Wraps All Rows) --}}
 
 <script>
+    @php
+        $defaultUserLat = $customerProfile->latitude ?? null;
+        $defaultUserLng = $customerProfile->longitude ?? null;
+    @endphp
+
     const shopLat = {{ $setting->latitude ?? -6.200000 }};
     const shopLng = {{ $setting->longitude ?? 106.816666 }};
     const ratePerKm = {{ $setting->delivery_rate_per_km ?? 2000 }};
     const isResume = {{ $pendingTransaction ? 'true' : 'false' }};
+    
+    // Cek apakah user punya data lokasi tersimpan
+    const hasSavedProfile = {{ $defaultUserLat ? 'true' : 'false' }};
+
+    // Koordinat Default User (Dari Profil atau Toko)
+    const userStartLat = {{ $defaultUserLat ?? ($setting->latitude ?? -6.200000) - 0.005 }};
+    const userStartLng = {{ $defaultUserLng ?? ($setting->longitude ?? 106.816666) - 0.005 }};
 
     if (!isResume) {
-        var map = L.map('map').setView([shopLat, shopLng], 14);
+        var map = L.map('map').setView([userStartLat, userStartLng], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(map);
         
+        // Marker Toko
         L.marker([shopLat, shopLng], {icon: L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#435ebe; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 4px rgba(67, 94, 190, 0.2);'></div>", iconSize: [20, 20], iconAnchor: [10, 10] })}).addTo(map);
         
-        var userMarker = L.marker([shopLat - 0.005, shopLng - 0.005], {draggable: true, icon: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41] })}).addTo(map);
+        // Marker User (Bisa Digeser)
+        var userMarker = L.marker([userStartLat, userStartLng], {draggable: true, icon: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41] })}).addTo(map);
         
         var polyline = L.polyline([], {color: '#435ebe', dashArray: '5, 8', weight: 3}).addTo(map);
+
+        // LOGIKA AUTO-GPS: Jika tidak ada profil tersimpan, cari lokasi terkini
+        if (!hasSavedProfile && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Pindah Peta & Marker ke Lokasi Terkini
+                    map.flyTo([lat, lng], 16);
+                    userMarker.setLatLng([lat, lng]);
+                    
+                    // Update perhitungan jarak
+                    updateDistance(); 
+                },
+                (error) => {
+                    console.log("Akses lokasi ditolak/error, menggunakan lokasi default toko.");
+                }
+            );
+        }
 
         function updateDistance() {
             var userPos = userMarker.getLatLng();

@@ -24,6 +24,22 @@ class RegisterController extends Controller
     use RegistersUsers;
 
     /**
+     * Show the application registration form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showRegistrationForm()
+    {
+        // Ambil 1 testimoni acak bintang >= 4
+        $testimonial = \App\Models\Testimonial::with('user')
+                        ->where('rate', '>=', 4)
+                        ->inRandomOrder()
+                        ->first();
+
+        return view('auth.register', compact('testimonial'));
+    }
+
+    /**
      * Where to redirect users after registration.
      *
      * @var string

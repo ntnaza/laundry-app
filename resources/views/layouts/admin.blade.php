@@ -13,7 +13,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/favicon.svg') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}" type="image/x-icon">
 
     <style>
         :root {
@@ -227,14 +227,25 @@
         <!-- SIDEBAR FLOATING -->
         <div id="sidebar" class="active">
             <!-- Header Logo -->
-            <div class="sidebar-header d-flex align-items-center gap-3">
-                <div class="bg-primary text-white rounded-4 box-center shadow-lg" style="width: 48px; height: 48px;">
-                    <i class="bi bi-basket-fill fs-4"></i>
-                </div>
-                <div style="line-height: 1.2;">
-                    <h5 class="fw-heading mb-0 text-dark">{{ $setting->shop_name ?? 'LaundryKuy' }}</h5>
-                    <small class="text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">DASHBOARD</small>
-                </div>
+            <div class="sidebar-header">
+                @if($setting && $setting->logo)
+                    <div class="mb-1 text-center text-md-start">
+                        <img src="{{ asset('storage/' . $setting->logo) }}" style="width: 100%; max-width: 160px; height: auto; object-fit: contain;" alt="Logo">
+                    </div>
+                    <small class="text-muted fw-bold d-block ms-1" style="font-size: 0.65rem; letter-spacing: 2px;">DASHBOARD</small>
+                @else
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-4 box-center shadow-lg overflow-hidden" style="width: 48px; height: 48px;">
+                            <div class="bg-primary w-100 h-100 box-center text-white">
+                                <i class="bi bi-basket-fill fs-4"></i>
+                            </div>
+                        </div>
+                        <div style="line-height: 1.2;">
+                            <h5 class="fw-heading mb-0 text-dark">{{ $setting->shop_name ?? 'LaundryKuy' }}</h5>
+                            <small class="text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">DASHBOARD</small>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Menu List -->
@@ -328,10 +339,14 @@
             <!-- Footer Profile -->
             <div class="sidebar-footer">
                 <div class="d-flex align-items-center justify-content-between">
-                    <a href="{{ route('profile.index') }}" class="d-flex align-items-center gap-3 text-decoration-none hover-scale transition-300">
+                    <a href="{{ auth()->user()->role === 'driver' ? route('driver.profile.index') : route('profile.index') }}" class="d-flex align-items-center gap-3 text-decoration-none hover-scale transition-300">
                         <div class="avatar-ring">
-                            <div class="avatar bg-primary text-white rounded-circle box-center" style="width: 38px; height: 38px;">
-                                <span class="fw-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                            <div class="avatar bg-primary text-white rounded-circle box-center overflow-hidden" style="width: 38px; height: 38px;">
+                                @if(auth()->user()->avatar)
+                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <span class="fw-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                @endif
                             </div>
                         </div>
                         <div style="line-height: 1.3;">

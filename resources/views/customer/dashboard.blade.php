@@ -260,10 +260,10 @@
                                 
                                 <form action="{{ route('customer.order.review', $order->id) }}" method="POST">
                                     @csrf
-                                    <div class="rating-input d-flex justify-content-center flex-row-reverse gap-2 mb-4">
+                                    <div class="rating-input mb-4">
                                         @for($i=5; $i>=1; $i--)
-                                            <input type="radio" name="rate" id="r{{$order->id}}-{{$i}}" value="{{$i}}" class="d-none peer" required>
-                                            <label for="r{{$order->id}}-{{$i}}" class="cursor-pointer text-muted fs-2 transition-300 peer-hover:text-warning peer-checked:text-warning">
+                                            <input type="radio" name="rate" id="r{{$order->id}}-{{$i}}" value="{{$i}}" required>
+                                            <label for="r{{$order->id}}-{{$i}}" class="fs-2">
                                                 <i class="bi bi-star-fill"></i>
                                             </label>
                                         @endfor
@@ -517,9 +517,40 @@
     .btn-white { background-color: white; border: 1px solid white; color: var(--primary); }
     .btn-white:hover { background-color: #f8f9fa; color: var(--primary); }
     
-    /* Rating Star Logic */
-    .rating-input input:checked ~ label { color: #F59E0B; }
-    .rating-input label:hover, .rating-input label:hover ~ label { color: #F59E0B; }
+    /* Rating Star Logic - Robust Implementation */
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse; /* Important for sibling selector logic */
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    /* Strictly hide the radio button (removes the bullet) */
+    .rating-input input {
+        appearance: none;
+        -webkit-appearance: none;
+        display: none; 
+    }
+    
+    .rating-input label {
+        color: #e2e8f0; /* Default Gray */
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+    
+    /* Hover & Checked Effects */
+    /* Because of row-reverse:
+       - The DOM order is 5, 4, 3, 2, 1
+       - Visually it renders as 1, 2, 3, 4, 5
+       - Hovering a star (e.g. 3) selects it and its FOLLOWING siblings in DOM (2, 1)
+       - So visually 1, 2, 3 light up.
+    */
+    .rating-input label:hover,
+    .rating-input label:hover ~ label,
+    .rating-input input:checked ~ label,
+    .rating-input input:checked ~ label ~ label {
+        color: #F59E0B !important; /* Yellow-400 */
+    }
 </style>
 
 @endsection

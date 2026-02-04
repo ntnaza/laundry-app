@@ -42,7 +42,33 @@ class HomeController extends Controller
     // Fungsi Cek Resi
     public function track(Request $request)
     {
-        // Tetap bawa data landing page lainnya biar gak error
+        // Cari Transaksi
+        $tracking_result = Transaction::with('customer')
+                            ->where('invoice_code', $request->invoice_code)
+                            ->first();
+
+        // JIKA REQUEST VIA AJAX (Fetch/Axios)
+        if ($request->ajax()) {
+            if (!$tracking_result) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Kode Invoice tidak ditemukan!'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'invoice' => $tracking_result->invoice_code,
+                    'status' => $tracking_result->status, // pending, process, ready, done
+                    'customer' => $tracking_result->customer->name,
+                    'total' => number_format($tracking_result->total_price),
+                    'date' => $tracking_result->created_at->format('d M Y H:i')
+                ]
+            ]);
+        }
+
+        // FALLBACK (Non-JS)
         $services = Service::all();
         $totalCustomers = Customer::count();
         $avgRating = Testimonial::avg('rate') ?? 0;
@@ -57,11 +83,6 @@ class HomeController extends Controller
                         ->get();
 
         $setting = \App\Models\Setting::first();
-
-        // Cari Transaksi
-        $tracking_result = Transaction::with('customer')
-                            ->where('invoice_code', $request->invoice_code)
-                            ->first();
 
         if (!$tracking_result) {
             return redirect()->route('home')->with('error', 'Kode Invoice tidak ditemukan! Cek lagi ya.');

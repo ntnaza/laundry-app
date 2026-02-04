@@ -189,12 +189,20 @@
                     </a>
 
                     <div class="mb-4 mt-5 pt-3">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
-                                <i class="bi bi-basket-fill fs-5" style="display: flex; align-items: center; justify-content: center;"></i>
+                        @if($setting && $setting->logo)
+                            <div class="mb-4">
+                                <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" style="width: 200px; height: auto;" class="d-block">
                             </div>
-                            <h3 class="m-0 text-primary fw-bold">{{ $setting->shop_name ?? 'LaundryKuy' }}</h3>
-                        </div>
+                        @else
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px;">
+                                    <div class="bg-primary w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                                        <i class="bi bi-basket-fill fs-5"></i>
+                                    </div>
+                                </div>
+                                <h3 class="m-0 text-primary fw-bold">{{ $setting->shop_name ?? 'LaundryKuy' }}</h3>
+                            </div>
+                        @endif
                         <h1 class="mb-2">Buat Akun Baru</h1>
                         <p class="text-muted">Bergabunglah dan nikmati kemudahan laundry antar-jemput.</p>
                     </div>
@@ -259,20 +267,37 @@
             <div class="col-lg-7 d-none d-lg-block">
                 <div class="auth-right">
                     <div class="overlay">
-                        <div class="mb-4">
-                            <div class="d-flex gap-1 text-warning mb-2">
-                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        @if(isset($testimonial) && $testimonial)
+                            <div class="mb-4">
+                                <div class="d-flex gap-1 text-warning mb-2">
+                                    @for($i=1; $i<=5; $i++)
+                                        <i class="bi bi-star-fill {{ $i <= $testimonial->rate ? '' : 'text-white-50' }}"></i>
+                                    @endfor
+                                </div>
+                                <h2 class="text-white mb-3">"Solusi Cerdas Laundry!"</h2>
+                                <p class="text-white-50 fs-5">"{{ $testimonial->content }}"</p>
                             </div>
-                            <h2 class="text-white mb-3">"Solusi Cerdas Laundry!"</h2>
-                            <p class="text-white-50 fs-5">"Saya tidak perlu lagi repot antri atau nunggu lama. Tinggal klik, kurir datang, cucian beres. Sangat direkomendasikan!"</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <img src="https://i.pravatar.cc/150?img=12" class="rounded-circle border border-2 border-white" width="50" alt="User">
-                            <div>
-                                <h6 class="text-white mb-0 fw-bold">Dimas Anggara</h6>
-                                <small class="text-white-50">Member Sejak 2024</small>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle overflow-hidden border border-2 border-white" style="width: 50px; height: 50px;">
+                                    @if($testimonial->user->avatar)
+                                        <img src="{{ asset('storage/' . $testimonial->user->avatar) }}" class="w-100 h-100 object-fit-cover" alt="User">
+                                    @else
+                                        <div class="w-100 h-100 bg-white text-primary d-flex align-items-center justify-content-center fw-bold fs-5">
+                                            {{ substr($testimonial->user->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h6 class="text-white mb-0 fw-bold">{{ $testimonial->user->name }}</h6>
+                                    <small class="text-white-50">Member Setia</small>
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <div class="mb-4">
+                                <h2 class="text-white mb-3">Gabung Sekarang!</h2>
+                                <p class="text-white-50 fs-5">Nikmati kemudahan layanan laundry premium dengan harga terjangkau.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

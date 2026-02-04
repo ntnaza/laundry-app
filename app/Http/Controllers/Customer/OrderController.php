@@ -91,17 +91,46 @@ class OrderController extends Controller
 
             DB::transaction(function () use ($request, &$transactionId, &$newTransaction) {
                 
-                // Cari/Buat Customer berdasarkan HP yang diinput
-                $customer = Customer::firstOrCreate(
-                    ['phone' => $request->phone], 
-                    ['name' => Auth::user()->name, 'address' => $request->pickup_address] // Simpan alamat juga
-                );
-                
-                // Jika customer sudah ada tapi alamat masih '-' atau beda, update alamatnya
-                if ($customer->address == '-' || $customer->address != $request->pickup_address) {
-                    $customer->update(['address' => $request->pickup_address]);
-                }
+                // LOGIC BARU: Cek Customer berdasarkan User ID dulu (Biar gak duplikat kalau ganti alamat/HP)
+                $user = Auth::user();
+                $customer = Customer::where('user_id', $user->id)->first();
 
+                if ($customer) {
+                    // Jika User sudah punya Customer Profile -> Update Data
+                    $updateData = ['address' => $request->pickup_address];
+                    
+                    // Cek jika HP berubah & pastikan belum dipakai orang lain
+                    if ($customer->phone != $request->phone) {
+                        $phoneExists = Customer::where('phone', $request->phone)->where('id', '!=', $customer->id)->exists();
+                        if (!$phoneExists) {
+                            $updateData['phone'] = $request->phone;
+                        }
+                    }
+                    $customer->update($updateData);
+
+                } else {
+                    // Jika Belum punya Profile (Order Pertama)
+                    // Cek apakah HP ini pernah dipakai sebagai Guest?
+                    $customer = Customer::where('phone', $request->phone)->first();
+
+                    if ($customer) {
+                        // Jika ada (Guest) -> Klaim jadi milik User ini
+                        $customer->update([
+                            'user_id' => $user->id,
+                            'name' => $user->name, // Update nama sesuai akun
+                            'address' => $request->pickup_address
+                        ]);
+                    } else {
+                        // Jika benar-benar baru -> Buat Baru
+                        $customer = Customer::create([
+                            'user_id' => $user->id,
+                            'name' => $user->name,
+                            'phone' => $request->phone,
+                            'address' => $request->pickup_address
+                        ]);
+                    }
+                }
+                
                 $deliveryFee = $request->delivery_fee;
                 $invoice = 'TRX-' . mt_rand(10000, 99999);
 
@@ -278,7 +307,15 @@ class OrderController extends Controller
         } 
         // 2. Jika Status SUDAH DIPROSES (Bukan Draft) -> Pelunasan
         else {
-            $amountToPay = $transaction->total_price - $transaction->paid_amount;
+            // LOGIKA PERBAIKAN:
+            // total_price di DB = (Subtotal - Diskon). TIDAK termasuk Ongkir.
+            // paid_amount di DB = Akumulasi semua pembayaran (termasuk DP Ongkir).
+            // Jadi, uang yang 'efektif' sudah dibayar untuk ITEM adalah (paid_amount - delivery_fee).
+            
+            $paidForItem = $transaction->paid_amount - $transaction->delivery_fee;
+            if ($paidForItem < 0) $paidForItem = 0; // Jaga-jaga
+
+            $amountToPay = $transaction->total_price - $paidForItem;
             $paymentTypeSuffix = '-FINAL';
         }
 
@@ -441,7 +478,11 @@ class OrderController extends Controller
             'content' => 'required|string|max:500'
         ]);
 
-        $transaction = Transaction::where('user_id', Auth::id())->where('status', 'done')->findOrFail($transactionId);
+        // Fix: Gunakan 'app_user_id' untuk validasi pemilik pesanan (Pelanggan)
+        // 'user_id' itu milik Admin/Staff yang memproses
+        $transaction = Transaction::where('app_user_id', Auth::id())
+                        ->where('status', 'done')
+                        ->findOrFail($transactionId);
 
         if (Testimonial::where('transaction_id', $transaction->id)->exists()) {
             return back()->with('error', 'Sudah diulas.');

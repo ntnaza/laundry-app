@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') - LaundryKuy</title>
+    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}" type="image/x-icon">
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}">
@@ -102,23 +103,36 @@
 </head>
 
 <body>
+    @php $setting = \App\Models\Setting::first(); @endphp
     <nav class="navbar navbar-expand-lg desktop-nav fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('customer.dashboard') }}">
-                <div class="bg-primary text-white rounded-3 box-center shadow-sm" style="width: 38px; height: 38px;">
-                    <i class="bi bi-basket-fill fs-6"></i>
-                </div>
-                <span class="fw-heading fs-5 text-primary">LaundryKuy</span>
+                @if($setting && $setting->logo)
+                    <img src="{{ asset('storage/' . $setting->logo) }}" style="height: 40px; width: auto; max-width: 180px;" alt="Logo" class="object-fit-contain">
+                @else
+                    <div class="rounded-3 box-center shadow-sm overflow-hidden" style="width: 38px; height: 38px;">
+                        <div class="bg-primary w-100 h-100 box-center text-white">
+                            <i class="bi bi-basket-fill fs-6"></i>
+                        </div>
+                    </div>
+                    <span class="fw-heading fs-5 text-primary">{{ $setting->shop_name ?? 'LaundryKuy' }}</span>
+                @endif
             </a>
             
             <div class="d-flex align-items-center gap-3">
-                <div class="text-end d-none d-md-block">
-                    <small class="text-muted d-block" style="font-size: 0.7rem; margin-bottom: -2px;">Selamat Datang,</small>
-                    <span class="fw-bold text-dark">{{ Auth::user()->name }}</span>
-                </div>
-                <div class="bg-light-primary text-primary fw-bold rounded-circle box-center border border-2 border-white shadow-sm" style="width: 42px; height: 42px;">
-                    {{ substr(Auth::user()->name, 0, 1) }}
-                </div>
+                <a href="{{ route('customer.profile.index') }}" class="text-decoration-none d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-md-block">
+                        <small class="text-muted d-block" style="font-size: 0.7rem; margin-bottom: -2px;">Selamat Datang,</small>
+                        <span class="fw-bold text-dark">{{ Auth::user()->name }}</span>
+                    </div>
+                    <div class="bg-light-primary text-primary fw-bold rounded-circle box-center border border-2 border-white shadow-sm overflow-hidden" style="width: 42px; height: 42px;">
+                        @if(Auth::user()->avatar)
+                            <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="w-100 h-100 object-fit-cover">
+                        @else
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        @endif
+                    </div>
+                </a>
                 
                 {{-- TOMBOL LOGOUT FIX --}}
                 <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-sm btn-light text-danger rounded-circle fw-bold ms-2 box-center shadow-sm border" style="width: 38px; height: 38px;">
@@ -141,8 +155,8 @@
                 <i class="bi bi-plus-lg"></i>
             </a>
         </div>
-        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-item-mobile">
-            <i class="bi bi-box-arrow-right"></i> Keluar
+        <a href="{{ route('customer.profile.index') }}" class="nav-item-mobile {{ request()->routeIs('customer.profile.index') ? 'active' : '' }}">
+            <i class="bi bi-person-circle"></i> Profil
         </a>
     </div>
 

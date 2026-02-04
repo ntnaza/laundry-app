@@ -229,26 +229,31 @@ class TransactionController extends Controller
             $pointsEarned = floor($transaction->total_price / 10000);
             
             if ($pointsEarned > 0) {
-                // Tambah poin ke customer
-                $transaction->load('customer');
-                if ($transaction->customer) {
-                    $transaction->customer->increment('points', $pointsEarned);
+                // Pastikan relasi customer terload
+                // Cek apakah customer_id ada?
+                if ($transaction->customer_id) {
+                    $customer = Customer::find($transaction->customer_id);
+                    if ($customer) {
+                        $customer->increment('points', $pointsEarned);
+                        // Notifikasi Poin
+                        session()->flash('success_point', "Status Selesai! Pelanggan dapat +$pointsEarned Poin ✨");
+                    }
                 }
-                
-                // Notifikasi Poin
-                session()->flash('success_point', "Status Selesai! Pelanggan dapat +$pointsEarned Poin ✨");
             }
         }
         
         // KOREKSI POIN (Rollback)
         if ($oldStatus == 'done' && $newStatus != 'done') {
             $pointsToRevoke = floor($transaction->total_price / 10000);
-            $transaction->load('customer');
-            if ($transaction->customer) {
-                if ($transaction->customer->points >= $pointsToRevoke) {
-                    $transaction->customer->decrement('points', $pointsToRevoke);
-                } else {
-                    $transaction->customer->update(['points' => 0]);
+            
+            if ($transaction->customer_id) {
+                $customer = Customer::find($transaction->customer_id);
+                if ($customer) {
+                    if ($customer->points >= $pointsToRevoke) {
+                        $customer->decrement('points', $pointsToRevoke);
+                    } else {
+                        $customer->update(['points' => 0]);
+                    }
                 }
             }
         }
@@ -404,21 +409,25 @@ class TransactionController extends Controller
         if ($request->status == 'done' && $transaction->getOriginal('status') != 'done') {
             $pointsEarned = floor($finalTotalPrice / 10000);
             if ($pointsEarned > 0) {
-                $transaction->load('customer'); // Load relasi
-                if ($transaction->customer) {
-                    $transaction->customer->increment('points', $pointsEarned);
+                if ($transaction->customer_id) {
+                    $customer = \App\Models\Customer::find($transaction->customer_id);
+                    if ($customer) {
+                        $customer->increment('points', $pointsEarned);
+                    }
                 }
             }
         }
         // KOREKSI POIN (Rollback - Jika batal selesai)
         elseif ($transaction->getOriginal('status') == 'done' && $request->status != 'done') {
-            $pointsToRevoke = floor($transaction->total_price / 10000);
-            $transaction->load('customer');
-            if ($transaction->customer) {
-                 if ($transaction->customer->points >= $pointsToRevoke) {
-                    $transaction->customer->decrement('points', $pointsToRevoke);
-                } else {
-                    $transaction->customer->update(['points' => 0]);
+            $pointsToRevoke = floor($transaction->total_price / 10000); // Pakai total lama sebelum edit
+            if ($transaction->customer_id) {
+                $customer = \App\Models\Customer::find($transaction->customer_id);
+                if ($customer) {
+                     if ($customer->points >= $pointsToRevoke) {
+                        $customer->decrement('points', $pointsToRevoke);
+                    } else {
+                        $customer->update(['points' => 0]);
+                    }
                 }
             }
         }

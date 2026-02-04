@@ -102,6 +102,10 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     
     // Kirim Review
     Route::post('/order/{id}/review', [OrderController::class, 'storeReview'])->name('order.review');
+
+    // Akses Profile untuk Customer
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 // 5. JALUR DRIVER (Kurir)

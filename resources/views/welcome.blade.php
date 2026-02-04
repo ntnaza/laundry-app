@@ -145,10 +145,16 @@
     <nav class="navbar navbar-expand-lg" id="mainNav">
         <div class="container">
             <a class="navbar-brand d-flex-center gap-2" href="#">
-                <div class="bg-primary text-white rounded-3 d-flex-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
-                    <i class="bi bi-basket-fill fs-6"></i>
-                </div>
-                <span class="font-heading fs-5">LaundryKuy</span>
+                @if(isset($setting) && $setting->logo)
+                    <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" style="height: 45px; width: auto; max-width: 200px;" class="object-fit-contain">
+                @else
+                    <div class="rounded-3 d-flex-center justify-content-center shadow-sm overflow-hidden" style="width: 36px; height: 36px;">
+                        <div class="bg-primary w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                            <i class="bi bi-basket-fill fs-6"></i>
+                        </div>
+                    </div>
+                    <span class="font-heading fs-5">{{ $setting->shop_name ?? 'LaundryKuy' }}</span>
+                @endif
             </a>
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -452,8 +458,12 @@
                             @if($service->image)
                                 <img src="{{ asset('storage/' . $service->image) }}" class="w-100 h-100 object-fit-cover" alt="{{ $service->name }}">
                             @else
-                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25">
-                                    <i class="bi bi-basket-fill" style="font-size: 3rem;"></i>
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25 overflow-hidden">
+                                    @if(isset($setting) && $setting->logo)
+                                        <img src="{{ asset('storage/' . $setting->logo) }}" class="w-100 h-100 object-fit-cover opacity-50" style="filter: grayscale(100%);">
+                                    @else
+                                        <i class="bi bi-basket-fill" style="font-size: 3rem;"></i>
+                                    @endif
                                 </div>
                             @endif
                             <span class="position-absolute top-0 end-0 badge bg-white text-dark shadow-sm m-2 border rounded-pill" style="font-size: 0.7rem;">
@@ -495,8 +505,14 @@
                         </div>
                         <p class="text-muted small mb-4">"{{ $review->content }}"</p>
                         <div class="d-flex-center gap-3">
-                            <div class="bg-primary text-white rounded-circle box-center fw-bold" style="width: 45px; height: 45px;">
-                                {{ substr($review->user->name, 0, 1) }}
+                            <div class="rounded-circle overflow-hidden box-center border border-light shadow-sm" style="width: 45px; height: 45px;">
+                                @if($review->user->avatar)
+                                    <img src="{{ asset('storage/' . $review->user->avatar) }}" class="w-100 h-100 object-fit-cover" alt="{{ $review->user->name }}">
+                                @else
+                                    <div class="w-100 h-100 bg-primary text-white d-flex align-items-center justify-content-center fw-bold">
+                                        {{ substr($review->user->name, 0, 1) }}
+                                    </div>
+                                @endif
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-0 text-dark">{{ $review->user->name }}</h6>
@@ -531,44 +547,166 @@
                             </div>
                         @endif
                         
-                        <form action="{{ route('track') }}" method="POST">
+                        <form id="trackingForm" action="{{ route('track') }}" method="POST">
                             @csrf
                             <div class="position-relative">
-                                <input type="text" name="invoice_code" class="track-input text-center fw-bold" placeholder="Contoh: TRX-12345" required>
-                                <button type="submit" class="btn btn-primary rounded-pill position-absolute top-0 end-0 m-1 px-4 fw-bold" style="height: calc(100% - 8px);">
-                                    Lacak
+                                <input type="text" name="invoice_code" id="invoiceInput" class="track-input text-center fw-bold" placeholder="Contoh: TRX-12345" required>
+                                <button type="submit" id="btnTrack" class="btn btn-primary rounded-pill position-absolute top-0 end-0 m-1 px-4 fw-bold" style="height: calc(100% - 8px);">
+                                    <span class="normal-state">Lacak</span>
+                                    <span class="loading-state d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
                                 </button>
                             </div>
                         </form>
-
-                        {{-- RESULT TRACKING --}}
-                        @if(isset($tracking_result))
-                        <div class="mt-4 pt-4 border-top animate__animated animate__fadeIn">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold mb-0">Invoice #{{ $tracking_result->invoice_code }}</h5>
-                                @if($tracking_result->status == 'pending') <span class="badge bg-secondary">Antri</span>
-                                @elseif($tracking_result->status == 'process') <span class="badge bg-info">Dicuci</span>
-                                @elseif($tracking_result->status == 'ready') <span class="badge bg-warning text-dark">Siap Ambil</span>
-                                @elseif($tracking_result->status == 'done') <span class="badge bg-success">Selesai</span>
-                                @endif
-                            </div>
-                            <div class="row text-start bg-light rounded-3 p-3 g-2">
-                                <div class="col-6">
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">PELANGGAN</small>
-                                    <span class="fw-bold text-dark">{{ $tracking_result->customer->name }}</span>
-                                </div>
-                                <div class="col-6 text-end">
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">TOTAL BAYAR</small>
-                                    <span class="fw-bold text-primary">Rp {{ number_format($tracking_result->total_price) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    {{-- MODAL TRACKING RESULT (NEW) --}}
+    <div class="modal fade" id="trackingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-receipt me-2"></i>Status Pesanan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    
+                    {{-- Status Icon Animation --}}
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light shadow-sm" style="width: 80px; height: 80px;">
+                            <i id="modalStatusIcon" class="bi bi-box-seam fs-1 text-primary"></i>
+                        </div>
+                        <h4 class="mt-3 fw-bold mb-0 text-dark" id="modalStatusText">Memproses...</h4>
+                        <span class="badge bg-light text-muted border rounded-pill px-3 mt-2" id="modalInvoice">INV-XXXXX</span>
+                    </div>
+
+                    {{-- Details --}}
+                    <div class="bg-light rounded-3 p-3 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Nama Pelanggan</span>
+                            <span class="fw-bold text-dark" id="modalCustomer">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Tanggal Masuk</span>
+                            <span class="fw-bold text-dark" id="modalDate">-</span>
+                        </div>
+                        <div class="border-top my-2"></div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Total Tagihan</span>
+                            <span class="fs-5 fw-bold text-primary" id="modalTotal">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 w-100 fw-bold" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('trackingForm');
+            const btn = document.getElementById('btnTrack');
+            const normalState = btn.querySelector('.normal-state');
+            const loadingState = btn.querySelector('.loading-state');
+            const modal = new bootstrap.Modal(document.getElementById('trackingModal'));
+
+            // Elements in Modal
+            const elStatusIcon = document.getElementById('modalStatusIcon');
+            const elStatusText = document.getElementById('modalStatusText');
+            const elInvoice = document.getElementById('modalInvoice');
+            const elCustomer = document.getElementById('modalCustomer');
+            const elDate = document.getElementById('modalDate');
+            const elTotal = document.getElementById('modalTotal');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Stop reload
+
+                // UI Loading
+                btn.disabled = true;
+                normalState.classList.add('d-none');
+                loadingState.classList.remove('d-none');
+
+                const formData = new FormData(form);
+
+                fetch("{{ route('track') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset UI
+                    btn.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+
+                    if(data.status === 'success') {
+                        const trx = data.data;
+                        
+                        // Update Content
+                        elInvoice.textContent = '#' + trx.invoice;
+                        elCustomer.textContent = trx.customer;
+                        elDate.textContent = trx.date;
+                        elTotal.textContent = 'Rp ' + trx.total;
+
+                        // Logic Icon & Status Text
+                        let iconClass = 'bi-hourglass-split';
+                        let colorClass = 'text-secondary';
+                        let statusLabel = 'Menunggu';
+
+                        if(trx.status === 'pending') {
+                            iconClass = 'bi-hourglass-split';
+                            colorClass = 'text-secondary';
+                            statusLabel = 'Menunggu Konfirmasi';
+                        } else if(trx.status === 'process') {
+                            iconClass = 'bi-water';
+                            colorClass = 'text-info';
+                            statusLabel = 'Sedang Dicuci';
+                        } else if(trx.status === 'ready') {
+                            iconClass = 'bi-box-seam';
+                            colorClass = 'text-warning';
+                            statusLabel = 'Siap Diambil/Diantar';
+                        } else if(trx.status === 'done') {
+                            iconClass = 'bi-check-circle-fill';
+                            colorClass = 'text-success';
+                            statusLabel = 'Selesai';
+                        }
+
+                        elStatusIcon.className = `bi ${iconClass} fs-1 ${colorClass}`;
+                        elStatusText.textContent = statusLabel;
+                        elStatusText.className = `mt-3 fw-bold mb-0 ${colorClass}`;
+
+                        // Show Modal
+                        modal.show();
+                    } else {
+                        // Error (Not Found)
+                        Toastify({
+                            text: "❌ " + (data.message || "Data tidak ditemukan"),
+                            duration: 3000,
+                            gravity: "top", 
+                            position: "center",
+                            backgroundColor: "#ef4444",
+                            className: "rounded-pill shadow-lg fw-bold"
+                        }).showToast();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+                    alert("Terjadi kesalahan sistem. Coba lagi nanti.");
+                });
+            });
+        });
+    </script>
 
     <section id="faq" class="section-padding bg-white">
         <div class="container">
@@ -673,11 +811,19 @@
         <div class="container">
             <div class="row gy-4">
                 <div class="col-lg-4">
-                    <div class="d-flex-center gap-2 mb-3">
-                        <div class="bg-primary text-white rounded-circle d-flex-center justify-content-center" style="width: 32px; height: 32px;">
-                            <i class="bi bi-basket-fill small"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0 text-dark">{{ $setting->shop_name ?? 'LaundryKuy' }}</h6>
+                    <div class="mb-3">
+                        @if(isset($setting) && $setting->logo)
+                            <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" style="width: 180px; height: auto;" class="d-block mb-3">
+                        @else
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center overflow-hidden shadow-lg border border-4 border-white" style="width: 60px; height: 60px;">
+                                    <div class="bg-primary w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                                        <i class="bi bi-basket-fill fs-3"></i>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ $setting->shop_name ?? 'LaundryKuy' }}</h6>
+                            </div>
+                        @endif
                     </div>
                     <p class="text-muted small">Solusi laundry modern untuk generasi anti ribet. Bersih, wangi, dan tepat waktu.</p>
                     <div class="d-flex gap-2 mt-3">
