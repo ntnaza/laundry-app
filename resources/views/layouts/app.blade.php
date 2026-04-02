@@ -8,14 +8,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}" type="image/x-icon">
+    
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
-    <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    <!-- Styles & Scripts -->
+    <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
+    <script src="{{ asset('assets/compiled/js/app.js') }}" defer></script>
 </head>
 <body>
     <div id="app">

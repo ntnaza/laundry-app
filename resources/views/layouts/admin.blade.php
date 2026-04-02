@@ -13,7 +13,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}" type="image/x-icon">
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
 
     <style>
         :root {

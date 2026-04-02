@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lacak Cucian - {{ $transaction->invoice_code }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/iconly.css') }}">

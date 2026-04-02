@@ -22,17 +22,20 @@ use App\Http\Controllers\Customer\OrderController; // Panggil Controller Custome
 
 // 1. JALUR PUBLIK (Landing Page & Tracking)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', function() {
+    return redirect('/');
+});
 Route::post('/track', [HomeController::class, 'track'])->name('track');
 
 // Route Midtrans (Harus Publik buat Callback)
 Route::post('/midtrans/callback', [App\Http\Controllers\Customer\OrderController::class, 'callback']); 
 
 // 2. OTENTIKASI (Login/Register/Logout)
-Auth::routes(); // Biarkan default biar orang bisa register
+Auth::routes(['verify' => true]);
 
 // 3. JALUR ADMIN (Dashboard & Sistem)
 // GROUP 1: BISA DIAKSES SEMUA (Owner, Admin, Staff)
-Route::middleware(['auth', 'role:owner,admin,staff'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'verified', 'role:owner,admin,staff'])->prefix('admin')->group(function () {
     
     // Dashboard & Radar Notifikasi
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -83,7 +86,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->group(function () {
 
 
 // 4. JALUR PELANGGAN (Customer Area)
-Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->group(function () {
 
     // Dashboard Pelanggan
     Route::get('/dashboard', [OrderController::class, 'index'])->name('dashboard');
@@ -109,7 +112,7 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
 });
 
 // 5. JALUR DRIVER (Kurir)
-Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:driver'])->prefix('driver')->name('driver.')->group(function () {
     Route::get('/tasks', [\App\Http\Controllers\DriverController::class, 'index'])->name('tasks');
     Route::get('/history', [\App\Http\Controllers\DriverController::class, 'history'])->name('history');
     Route::put('/tasks/{id}/update', [\App\Http\Controllers\DriverController::class, 'updateStatus'])->name('updateStatus');

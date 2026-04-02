@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         
+        // Trust semua proxy (Penting untuk Ngrok)
+        $middleware->trustProxies(at: '*');
+
         // Exclude CSRF untuk Callback Midtrans
         $middleware->validateCsrfTokens(except: [
             'midtrans/callback',

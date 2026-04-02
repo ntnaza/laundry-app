@@ -10,6 +10,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar - {{ $setting->shop_name ?? 'Laundry System' }}</title>
     
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
+    
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
@@ -158,8 +160,9 @@
             text-decoration: none;
             color: #64748b;
             font-weight: 600;
-            display: flex;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             transition: 0.3s;
             background: #f8fafc;
@@ -169,7 +172,11 @@
         }
         .btn-back:hover { color: var(--primary); background: #eff6ff; }
         
-        .btn-back i { display: flex; align-items: center; line-height: 0; }
+        .btn-back i { 
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center;
+        }
 
         @media (max-width: 991px) {
             .auth-left { padding: 40px; overflow-y: auto; }
@@ -239,7 +246,10 @@
                                 <div class="input-icon-wrapper">
                                     <i class="bi bi-lock"></i>
                                 </div>
-                                <input type="password" name="password" class="input-field" placeholder="Buat Kata Sandi" required>
+                                <input type="password" name="password" id="password" class="input-field" placeholder="Buat Kata Sandi" required>
+                                <div class="input-icon-wrapper" style="cursor: pointer;" onclick="togglePassword('password', this)">
+                                    <i class="bi bi-eye"></i>
+                                </div>
                             </div>
                             @error('password')
                                 <small class="text-danger ps-3 mt-1 d-block">{{ $message }}</small>
@@ -251,9 +261,26 @@
                                 <div class="input-icon-wrapper">
                                     <i class="bi bi-shield-lock"></i>
                                 </div>
-                                <input type="password" name="password_confirmation" class="input-field" placeholder="Ulangi Kata Sandi" required>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="input-field" placeholder="Ulangi Kata Sandi" required>
+                                <div class="input-icon-wrapper" style="cursor: pointer;" onclick="togglePassword('password_confirmation', this)">
+                                    <i class="bi bi-eye"></i>
+                                </div>
                             </div>
                         </div>
+
+                        <script>
+                            function togglePassword(inputId, iconEl) {
+                                const input = document.getElementById(inputId);
+                                const icon = iconEl.querySelector('i');
+                                if (input.type === 'password') {
+                                    input.type = 'text';
+                                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                                } else {
+                                    input.type = 'password';
+                                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                                }
+                            }
+                        </script>
 
                         <button class="btn-register">DAFTAR SEKARANG <i class="bi bi-arrow-right"></i></button>
                     </form>

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LaundryKuy - #1 Premium Laundry Service</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     {{-- Menggunakan CDN Bootstrap Icons terbaru untuk kompatibilitas lebih baik --}}

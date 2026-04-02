@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') - LaundryKuy</title>
-    <link rel="shortcut icon" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}" type="image/x-icon">
+    
+    <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}">
@@ -103,7 +104,6 @@
 </head>
 
 <body>
-    @php $setting = \App\Models\Setting::first(); @endphp
     <nav class="navbar navbar-expand-lg desktop-nav fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('customer.dashboard') }}">
