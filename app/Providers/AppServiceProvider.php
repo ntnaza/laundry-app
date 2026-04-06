@@ -30,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
 
         // 1. Kustomisasi Email Verifikasi (Bahasa Indonesia)
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
+            // Catat ke log untuk debugging (Sangat berguna di Hosting)
+            \Illuminate\Support\Facades\Log::info('Mengirim email verifikasi ke: ' . $notifiable->email . ' (URL: ' . $url . ')');
+
             return (new MailMessage)
                 ->subject('Verifikasi Alamat Email - LaundryKuy')
                 ->greeting('Halo, ' . $notifiable->name . '!')

@@ -20,15 +20,16 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 
                 // --- LOGIKA KOH ENGKOH ---
-                // Cek role user yang sedang login
+                // Cek role user yang sedang login (pake trim biar aman)
                 $user = Auth::user();
+                $role = trim($user->role);
 
-                if ($user->role === 'customer') {
+                if ($role == 'customer') {
                     // Kalau Customer -> Lempar ke Kandang Customer
                     return redirect()->route('customer.dashboard');
                 }
                 
-                if ($user->role === 'driver') {
+                if ($role == 'driver') {
                     // Kalau Driver -> Lempar ke Tugas Driver
                     return redirect()->route('driver.tasks');
                 }

@@ -48,9 +48,11 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
 {
-    if ($user->role == 'admin' || $user->role == 'staff' || $user->role == 'owner') {
+    $role = trim($user->role);
+
+    if ($role == 'admin' || $role == 'staff' || $role == 'owner') {
         return redirect()->route('dashboard'); // Ke Admin Panel
-    } elseif ($user->role == 'driver') {
+    } elseif ($role == 'driver') {
         return redirect()->route('driver.tasks'); // Ke Area Kurir
     } else {
         return redirect()->route('customer.dashboard'); // Ke Area Pelanggan

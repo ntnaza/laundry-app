@@ -121,15 +121,19 @@
 
                     <h1 class="mb-3">Verifikasi Email Anda</h1>
                     <p class="text-muted mb-4 fs-5">
-                        Sebelum melanjutkan, harap periksa email Anda untuk tautan verifikasi. 
-                        Jika Anda tidak menerima email tersebut, klik tombol di bawah ini untuk mengirim ulang.
+                        Kami telah mengirimkan tautan verifikasi ke: <br>
+                        <strong>{{ auth()->user()->email }}</strong>
+                    </p>
+
+                    <p class="text-muted mb-4 fs-6">
+                        Silakan periksa kotak masuk Anda (termasuk folder <strong>Spam</strong>). Jika Anda tidak menerima email tersebut, silakan klik tombol di bawah ini.
                     </p>
 
                     @if (session('resent'))
                         <div class="alert alert-success border-0 rounded-4 mb-4 shadow-sm d-flex align-items-center gap-3" role="alert">
                             <i class="bi bi-check-circle-fill fs-4"></i>
                             <div>
-                                Tautan verifikasi baru telah dikirim ke alamat email Anda.
+                                Tautan verifikasi baru telah dikirim!
                             </div>
                         </div>
                     @endif
