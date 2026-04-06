@@ -502,9 +502,9 @@
     </script>
 
     <script>
-        @if(session('success'))
+        @if(session('success') || session('status'))
             Toastify({
-                text: "{{ session('success') }}",
+                text: "{{ session('success') ?? session('status') }}",
                 duration: 3000,
                 close: true,
                 gravity: "top", 

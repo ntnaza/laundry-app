@@ -1,0 +1,24 @@
+[hexanusa@carrara laundrykuy]$ php artisan config:clear
+
+   INFO  Configuration cache cleared successfully.
+
+[hexanusa@carrara laundrykuy]$ php artisan cache:clear
+
+   INFO  Application cache cleared successfully.
+
+[hexanusa@carrara laundrykuy]$ php test_email.php
+--- DEBUG KONFIGURASI EMAIL ---
+Mailer: smtp
+Host: smtp.gmail.com
+Port: 587
+Encryption: tls
+From Address: miaterbean159@gmail.com
+From Name: LaundryKuy
+Queue: sync
+-------------------------------
+
+Sedang mencoba mengirim email...
+HASIL: Email berhasil diproses oleh Laravel!
+Catatan: Jika Mailer=log, cek storage/logs/laravel.log
+Catatan: Jika Queue=database dan Mailer=smtp, jalankan 'php artisan queue:work'
+[hexanusa@carrara laundrykuy]$

@@ -111,8 +111,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
-        @if(session('success'))
-            Toastify({ text: "{{ session('success') }}", duration: 3000, gravity: "top", position: "center", backgroundColor: "#10B981", className: "rounded-pill shadow-lg fw-bold" }).showToast();
+        @if(session('success') || session('status'))
+            Toastify({ text: "{{ session('success') ?? session('status') }}", duration: 3000, gravity: "top", position: "center", backgroundColor: "#10B981", className: "rounded-pill shadow-lg fw-bold" }).showToast();
         @endif
         @if(session('error'))
             Toastify({ text: "{{ session('error') }}", duration: 3000, gravity: "top", position: "center", backgroundColor: "#ef4444", className: "rounded-pill shadow-lg fw-bold" }).showToast();

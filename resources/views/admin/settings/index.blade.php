@@ -16,11 +16,6 @@
                 <p class="text-muted small mb-0">Identitas ini akan tampil di seluruh sistem.</p>
             </div>
             <div class="card-body p-4">
-                @if(session('success')) 
-                    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-2">
-                        <i class="bi bi-check-circle-fill fs-5"></i> {{ session('success') }}
-                    </div> 
-                @endif
 
                 <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf

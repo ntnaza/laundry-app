@@ -48,15 +48,6 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 no-print d-flex align-items-center gap-3 animate__animated animate__fadeIn">
-                <div class="bg-white text-success rounded-circle box-center" style="width: 32px; height: 32px;">
-                    <i class="bi bi-check-lg"></i>
-                </div>
-                <div class="fw-bold">{{ session('success') }}</div>
-            </div>
-        @endif
-
         {{-- FORM UPDATE STATUS (NO PRINT) --}}
         <div class="card border-0 shadow-soft rounded-4 mb-4 no-print overflow-hidden">
             <div class="card-header bg-white border-bottom border-light py-3 px-4">

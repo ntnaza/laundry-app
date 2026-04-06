@@ -95,9 +95,9 @@
         }
 
         /* Fix Icon Alignment */
-        .icon-box i, .btn-verify i {
+        .icon-box i, .btn-verify i, .alert i {
             line-height: 1 !important;
-            display: flex !important;
+            display: inline-flex !important;
             align-items: center;
             justify-content: center;
         }

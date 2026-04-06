@@ -16,11 +16,6 @@
     </div>
 
     <div class="card-body p-0">
-        @if(session('success'))
-            <div class="alert alert-success border-0 shadow-sm rounded-0 mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-check-circle-fill fs-5"></i> {{ session('success') }}
-            </div>
-        @endif
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

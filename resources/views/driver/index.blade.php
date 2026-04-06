@@ -124,12 +124,23 @@
 
     @empty
         <div class="col-12 text-center py-5">
-            <div class="bg-white p-5 rounded-4 shadow-sm d-inline-block">
-                <i class="bi bi-clipboard-check display-1 text-muted opacity-25"></i>
-                <h5 class="mt-3 text-muted fw-bold">Tugas Hari Ini Beres!</h5>
-                <p class="text-muted small">Belum ada tugas pengantaran atau penjemputan baru.</p>
+            <!-- Kotak Putih Utama -->
+            <div class="bg-white p-5 rounded-4 shadow-sm d-inline-flex align-items-center justify-content-center position-relative overflow-hidden" style="min-width: 380px; min-height: 220px;">
+                
+                <!-- Lapisan Ikon (Watermark di Tengah Sempurna) -->
+                <div class="position-absolute start-50 top-50 translate-middle" style="pointer-events: none; z-index: 0;">
+                    <i class="bi bi-clipboard-check text-muted" style="font-size: 10rem; opacity: 0.08; line-height: 0;"></i>
+                </div>
+
+                <!-- Lapisan Teks (Di Depan Ikon) -->
+                <div class="position-relative" style="z-index: 1;">
+                    <h5 class="text-muted fw-bold mb-2">Tugas Hari Ini Beres!</h5>
+                    <p class="text-muted small mb-0">Belum ada tugas pengantaran atau penjemputan baru.</p>
+                </div>
+
             </div>
         </div>
     @endforelse
+
 </div>
 @endsection

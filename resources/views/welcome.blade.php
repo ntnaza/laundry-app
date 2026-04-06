@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/static/images/logo/Laundry-app.png') }}?v=1.3">
     
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     {{-- Menggunakan CDN Bootstrap Icons terbaru untuk kompatibilitas lebih baik --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -541,12 +542,6 @@
                         </div>
                         <h3 class="fw-bold">Lacak Status Cucian</h3>
                         <p class="text-muted small mb-4">Masukkan kode invoice yang tertera pada struk pembayaran.</p>
-
-                        @if(session('error'))
-                            <div class="alert alert-danger border-0 rounded-3 mb-4 text-center small">
-                                <i class="bi bi-exclamation-circle me-1"></i> {{ session('error') }}
-                            </div>
-                        @endif
                         
                         <form id="trackingForm" action="{{ route('track') }}" method="POST">
                             @csrf

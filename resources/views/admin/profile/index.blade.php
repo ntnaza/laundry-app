@@ -20,22 +20,9 @@
             <a href="{{ Auth::user()->role == 'customer' ? route('customer.dashboard') : (Auth::user()->role == 'driver' ? route('driver.tasks') : route('dashboard')) }}" class="btn btn-white border shadow-sm rounded-pill px-4 fw-bold hover-up text-dark">
                 <i class="bi bi-arrow-left me-2"></i> Kembali
             </a>
-        </div>
-
-        @if(session('success'))
-            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center bg-success text-white rounded-circle flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-check-lg d-flex align-items-center justify-content-center" style="font-size: 1.3rem;"></i>
-                </div>
-                <div>
-                    <strong class="d-block">Berhasil!</strong> 
-                    <span class="small">{{ session('success') }}</span>
-                </div>
             </div>
-        @endif
 
-        @if($errors->any())
-            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-start gap-3">
+            @if($errors->any())            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-start gap-3">
                 <div class="d-flex align-items-center justify-content-center bg-danger text-white rounded-circle flex-shrink-0 mt-1" style="width: 38px; height: 38px;">
                     <i class="bi bi-exclamation-triangle-fill d-flex align-items-center justify-content-center" style="font-size: 1rem;"></i>
                 </div>
