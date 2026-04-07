@@ -215,24 +215,30 @@
                                         Detail
                                     </button>
 
-                                    {{-- LOGIKA TOMBOL AKSI --}}
-                                    @if($order->status == 'pending' && $order->details->count() == 0)
+                                    {{-- LOGIKA TOMBOL AKSI (PERBAIKAN) --}}
+                                    @if($order->status == 'draft')
+                                        {{-- Masih Draft artinya Ongkir Belum Dibayar --}}
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold shadow-sm" onclick="payOrder({{ $order->id }})">
+                                            Bayar Ongkir
+                                        </button>
+
+                                    @elseif($order->status == 'pending' && $order->details->count() == 0)
+                                        {{-- Sudah Bayar Ongkir (Pending) tapi item kosong -> Lanjut Input Item --}}
                                         <a href="{{ route('customer.order.create', ['resume_id' => $order->id]) }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold shadow-sm hover-top text-dark">
                                             <i class="bi bi-cart-plus me-1"></i> Lanjut
                                         </a>
 
-                                    @elseif($order->total_price > 0 && $order->status != 'pending' && $order->payment_status == 'unpaid')
-                                        
+                                    @elseif($order->payment_status == 'unpaid' && $order->total_price > 0)
+                                        {{-- Sudah ada total (sudah ditimbang/input) tapi belum lunas --}}
                                         @if($order->payment_method == 'cash')
                                             <span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-3 py-2">
                                                 <i class="bi bi-cash-stack me-1"></i> COD
                                             </span>
                                         @else
                                             <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm hover-top" onclick="payOrder({{ $order->id }})">
-                                                Bayar
+                                                Bayar Cucian
                                             </button>
                                         @endif
-
                                     @endif
 
                                     {{-- Tombol Review --}}

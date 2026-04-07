@@ -299,84 +299,84 @@ class OrderController extends Controller
         $amountToPay = 0;
         $paymentTypeSuffix = ''; 
 
-        // LOGIKA BARU:
-        // 1. Jika Status DRAFT (Baru Buat) -> Bayar Ongkir (DP)
+        // LOGIKA PERBAIKAN:
+        // A. Jika Status DRAFT -> Dia harus bayar Ongkir dulu (DP)
         if ($transaction->status == 'draft') {
             $amountToPay = $transaction->delivery_fee;
             $paymentTypeSuffix = '-DP'; 
         } 
-        // 2. Jika Status SUDAH DIPROSES (Bukan Draft) -> Pelunasan
+        // B. Jika Status PENDING tapi belum ada item -> Harusnya dia isi item dulu, bukan bayar.
+        elseif ($transaction->status == 'pending' && $transaction->details->count() == 0) {
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Silakan lengkapi detail pesanan (pilih baju/layanan) terlebih dahulu sebelum membayar pelunasan.']);
+            }
+            return redirect()->route('customer.order.create', ['resume_id' => $transaction->id])->with('error', 'Lengkapi detail pesanan dulu!');
+        }
+        // C. Jika sudah diproses (admin sudah nimbang) atau sudah input item sendiri
         else {
-            // LOGIKA PERBAIKAN:
-            // total_price di DB = (Subtotal - Diskon). TIDAK termasuk Ongkir.
-            // paid_amount di DB = Akumulasi semua pembayaran (termasuk DP Ongkir).
-            // Jadi, uang yang 'efektif' sudah dibayar untuk ITEM adalah (paid_amount - delivery_fee).
+            // Nominal cucian yang HARUS dibayar (sudah potong diskon)
+            $billCucian = $transaction->total_price; 
             
+            // Nominal yang SUDAH dibayar untuk CUCIAN (paid_amount - ongkir)
             $paidForItem = $transaction->paid_amount - $transaction->delivery_fee;
-            if ($paidForItem < 0) $paidForItem = 0; // Jaga-jaga
+            if ($paidForItem < 0) $paidForItem = 0; 
 
-            $amountToPay = $transaction->total_price - $paidForItem;
+            $amountToPay = $billCucian - $paidForItem;
             $paymentTypeSuffix = '-FINAL';
         }
 
         // Safety: Minimal bayar 100 perak (Aturan Midtrans)
         if ($amountToPay < 100) {
-            // Kalau tagihan 0 atau negatif, anggap lunas (skip midtrans)
-            if ($amountToPay <= 0 && $request->ajax()) {
-                return response()->json(['error' => 'Tagihan sudah lunas atau 0. Hubungi admin.']);
+            // Jika tagihan lunas/0, update status lunas manual biar aman
+            if ($amountToPay <= 0) {
+                if ($transaction->total_price > 0) {
+                    $transaction->update(['payment_status' => 'paid']);
+                }
+                if ($request->ajax()) {
+                    return response()->json(['error' => 'Tagihan sudah lunas. Silakan refresh halaman.']);
+                }
+                return back()->with('success', 'Tagihan sudah lunas!');
             }
             $amountToPay = 100;
         }
 
-        // REVISI: GENERATE TOKEN BARU
-        // Selalu generate baru untuk pelunasan (-FINAL) untuk menghindari token expired/invalid amount
-        if (!$transaction->snap_token || $transaction->status != 'draft') {
-            
-            $phone = '08123456789'; // Default fallback
-            if ($transaction->customer && $transaction->customer->phone) {
-                $phone = preg_replace('/[^0-9]/', '', $transaction->customer->phone);
-            }
-            
-            // Order ID Unik: INV-123-FINAL-TIMESTAMP
-            $midtransOrderId = $transaction->invoice_code . $paymentTypeSuffix . '-' . time();
-
-            $params = [
-                'transaction_details' => [
-                    'order_id' => $midtransOrderId,
-                    'gross_amount' => (int) $amountToPay,
-                ],
-                'customer_details' => [
-                    'first_name' => substr($transaction->customer->name ?? 'Guest', 0, 20),
-                    'phone' => $phone,
-                ],
-                // Item details opsional, kita skip biar aman dari selisih pembulatan
-            ];
-
-            try {
-                // LOGGING SEBELUM REQUEST
-                Log::info('MIDTRANS REQUEST (PAY):', ['order_id' => $midtransOrderId, 'amount' => $amountToPay]);
-                
-                $snapToken = Snap::getSnapToken($params);
-                $transaction->update(['snap_token' => $snapToken]);
-                
-            } catch (\Exception $e) {
-                // LOGGING ERROR
-                Log::error('MIDTRANS ERROR (PAY): ' . $e->getMessage());
-                
-                if ($request->ajax()) {
-                    return response()->json(['error' => $e->getMessage(), 'debug_key_used' => substr(config('midtrans.server_key'), 0, 5) . '...'], 500);
-                }
-                return back()->with('error', 'Midtrans Error: ' . $e->getMessage());
-            }
+        // REVISI: Selalu generate token baru jika nominal berubah atau token lama tidak ada
+        $midtransOrderId = $transaction->invoice_code . $paymentTypeSuffix . '-' . time();
+        
+        $phone = '08123456789';
+        if ($transaction->customer && $transaction->customer->phone) {
+            $phone = preg_replace('/[^0-9]/', '', $transaction->customer->phone);
         }
+        
+        $params = [
+            'transaction_details' => [
+                'order_id' => $midtransOrderId,
+                'gross_amount' => (int) $amountToPay,
+            ],
+            'customer_details' => [
+                'first_name' => substr($transaction->customer->name ?? 'Guest', 0, 20),
+                'phone' => $phone,
+            ],
+        ];
 
-        // Kalau dipanggil lewat AJAX (tombol bayar dashboard), balikin JSON
-        if ($request->ajax()) {
-            return response()->json(['snap_token' => $transaction->snap_token]);
+        try {
+            Log::info('MIDTRANS REQUEST (PAY):', ['order_id' => $midtransOrderId, 'amount' => $amountToPay]);
+            
+            $snapToken = Snap::getSnapToken($params);
+            $transaction->update(['snap_token' => $snapToken]);
+            
+            if ($request->ajax()) {
+                return response()->json(['snap_token' => $snapToken]);
+            }
+            return view('customer.payment', compact('transaction', 'amountToPay'));
+
+        } catch (\Exception $e) {
+            Log::error('MIDTRANS ERROR (PAY): ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Gagal terhubung ke Midtrans. Coba lagi nanti.'], 500);
+            }
+            return back()->with('error', 'Gagal memproses pembayaran.');
         }
-
-        // Kirim variable amountToPay ke view biar view tau ini bayar apa
-        return view('customer.payment', compact('transaction', 'amountToPay'));
     }
 
     public function callback(Request $request)
