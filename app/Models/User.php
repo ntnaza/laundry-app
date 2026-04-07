@@ -45,4 +45,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Customer::class);
     }
+
+    /**
+     * Akses Role (Biar bersih, gak ada spasi, dan huruf kecil semua)
+     */
+    public function getRoleAttribute($value)
+    {
+        return trim(strtolower($value));
+    }
 }

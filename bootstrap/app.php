@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // TAMBAHAN PENTING:
             // Ganti logika 'guest' bawaan dengan file buatan kita tadi
+            // Ini agar redirect setelah login (misal: masuk ke /login saat sudah login)
+            // Bisa diarahkan ke dashboard yang benar sesuai role.
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
         

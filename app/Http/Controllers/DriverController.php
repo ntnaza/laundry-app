@@ -49,7 +49,7 @@ class DriverController extends Controller
         $transaction = Transaction::findOrFail($id);
 
         // Keamanan: Pastikan yang update adalah driver yang bertugas
-        if ($transaction->courier_id !== Auth::id()) {
+        if ($transaction->courier_id != Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke tugas ini.');
         }
 
