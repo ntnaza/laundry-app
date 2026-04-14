@@ -31,7 +31,18 @@ Route::post('/track', [HomeController::class, 'track'])->name('track');
 Route::post('/midtrans/callback', [App\Http\Controllers\Customer\OrderController::class, 'callback']); 
 
 // 2. OTENTIKASI (Login/Register/Logout)
-Auth::routes(['verify' => true]);
+Auth::routes(['verify' => false]); // Matikan verify bawaan biar gak tabrakan
+
+// Custom OTP Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('email/verify', [App\Http\Controllers\Auth\VerificationController::class, 'show'])->name('verification.notice');
+    Route::post('email/verify', [App\Http\Controllers\Auth\VerificationController::class, 'verify'])->name('verification.verify');
+    Route::post('email/resend', [App\Http\Controllers\Auth\VerificationController::class, 'resend'])->name('verification.resend');
+});
+
+// Route Google Login
+Route::get('auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback']);
 
 // 3. JALUR ADMIN (Dashboard & Sistem)
 // GROUP 1: BISA DIAKSES SEMUA (Owner, Admin, Staff)

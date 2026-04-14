@@ -5,106 +5,143 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Struk #{{ $transaction->invoice_code }}</title>
     <style>
-        /* RESET & BASE */
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Courier New', Courier, monospace; /* Font mesin kasir */
-            font-size: 10pt; /* Ukuran pas buat thermal 58mm */
+        @page {
             margin: 0;
-            padding: 0;
-            width: 58mm; /* Lebar kertas */
-            background: #fff;
-            color: #000;
+            size: 58mm auto;
         }
         
-        .container { padding: 2mm; width: 100%; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-print-color-adjust: exact; 
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 9pt;
+            margin: 0;
+            padding: 0;
+            width: 58mm;
+            background: #fff;
+            color: #000;
+            line-height: 1.2;
+        }
+        
+        .container { 
+            padding: 2mm; 
+            width: 58mm;
+        }
         
         /* UTILITIES */
         .text-center { text-align: center; }
-        .text-right { text-align: right; }
         .fw-bold { font-weight: bold; }
         .d-flex { display: flex; justify-content: space-between; }
         
         /* DIVIDER */
         .divider {
             border-top: 1px dashed #000;
-            margin: 5px 0;
+            margin: 4px 0;
             width: 100%;
         }
-        .divider-bold {
-            border-top: 2px solid #000;
-            margin: 5px 0;
+        .divider-double {
+            border-top: 1px double #000;
+            margin: 4px 0;
+            height: 2px;
+            border-bottom: 1px double #000;
         }
 
         /* HEADER */
-        .header-title { font-size: 12pt; font-weight: bold; margin-bottom: 2px; }
-        .header-info { font-size: 8pt; margin-bottom: 2px; }
+        .shop-name { 
+            font-size: 12pt; 
+            font-weight: 900; 
+            margin-bottom: 2px; 
+        }
+        .shop-info { font-size: 7.5pt; margin-bottom: 1px; }
 
         /* ITEM LIST */
-        .item-row { margin-bottom: 3px; }
-        .item-name { display: block; font-weight: bold; }
-        .item-detail { font-size: 9pt; display: flex; justify-content: space-between; }
+        .item-name { font-weight: bold; display: block; text-transform: uppercase; font-size: 8.5pt; }
+        .item-detail { font-size: 8pt; display: flex; justify-content: space-between; margin-bottom: 4px; }
 
-        /* FOOTER */
-        .footer { font-size: 8pt; margin-top: 10px; }
-
-        /* TOMBOL (HANYA DI LAYAR) */
-        .no-print {
-            position: fixed; top: 0; left: 0; width: 100%;
-            background: #333; padding: 10px; text-align: center; z-index: 99;
+        /* TOTAL SECTION */
+        .total-row { display: flex; justify-content: space-between; font-size: 8.5pt; margin-bottom: 2px; }
+        .grand-total { 
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: bold; 
+            font-size: 11pt; 
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #000;
         }
-        .btn-back {
-            color: #fff; text-decoration: none; font-family: sans-serif; font-weight: bold; font-size: 14px;
-            border: 1px solid #fff; padding: 5px 15px; border-radius: 5px;
+
+        .payment-status {
+            margin: 8px 0;
+            padding: 4px;
+            border: 1px solid #000;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .footer { font-size: 7.5pt; margin-top: 10px; }
+
+        /* Sembunyikan navigasi jika dalam iframe/modal */
+        .no-print-nav {
+            display: block;
+            background: #333;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        /* Jika URL punya parameter 'popup', sembunyikan nav bar hitam */
+        @media screen {
+            body.is-popup .no-print-nav { display: none; }
         }
 
         @media print {
-            .no-print { display: none; }
-            @page { margin: 0; size: auto; }
-            body { margin: 0; padding: 0; }
-            .container { margin-top: 0 !important; } /* Reset margin saat print */
+            .no-print-nav { display: none !important; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .container { padding: 1mm; width: 58mm; box-shadow: none; border: none; }
         }
     </style>
 </head>
-<body onload="window.print()">
+<body class="{{ request()->has('popup') ? 'is-popup' : '' }}">
 
-    <div class="no-print">
-        <a href="{{ route('transactions.show', $transaction->id) }}" class="btn-back">⬅ Kembali ke Detail</a>
+    {{-- Navigasi hitam hanya muncul jika dibuka di tab baru --}}
+    @if(!request()->has('popup'))
+    <div class="no-print-nav">
+        <a href="{{ route('transactions.index') }}" style="color:#fff; text-decoration:none; font-family:sans-serif; font-size:12px; border:1px solid #fff; padding:4px 12px; border-radius:4px;">⬅ Kembali</a>
     </div>
+    @endif
 
-    <div class="container" style="margin-top: 40px;"> {{-- Margin layar --}}
+    <div class="container">
         
-        {{-- HEADER TOKO --}}
         <div class="text-center">
-            <div class="header-title">{{ strtoupper($setting->shop_name ?? 'LAUNDRY') }}</div>
-            <div class="header-info">{{ $setting->address ?? '-' }}</div>
-            <div class="header-info">WA: {{ $setting->phone ?? '-' }}</div>
+            <div class="shop-name">{{ strtoupper($setting->shop_name ?? 'LAUNDRY SYSTEM') }}</div>
+            <div class="shop-info">{{ $setting->address ?? '-' }}</div>
+            <div class="shop-info">Telp/WA: {{ $setting->phone ?? '-' }}</div>
         </div>
 
-        <div class="divider-bold"></div>
+        <div class="divider-double"></div>
 
-        {{-- INFO TRANSAKSI --}}
-        <div style="font-size: 9pt;">
+        <div style="font-size: 8pt;">
             <div class="d-flex">
-                <span>No: {{ $transaction->invoice_code }}</span>
-                <span>{{ $transaction->created_at->format('d/m H:i') }}</span>
+                <span>Inv: #{{ $transaction->invoice_code }}</span>
+                <span>{{ $transaction->created_at->format('d/m/y H:i') }}</span>
             </div>
-            <div style="margin-top: 2px;">
-                Plg: <strong>{{ substr($transaction->customer->name, 0, 18) }}</strong>
+            <div class="d-flex" style="margin-top: 2px;">
+                <span>Kasir: {{ explode(' ', ($transaction->user->name ?? 'System'))[0] }}</span>
+                <span>Plg: {{ substr($transaction->customer->name, 0, 12) }}</span>
             </div>
-            @if($transaction->customer->phone)
-            <div>Tel: {{ $transaction->customer->phone }}</div>
-            @endif
         </div>
 
         <div class="divider"></div>
 
-        {{-- LIST ITEM --}}
         @foreach($transaction->details as $item)
-        <div class="item-row">
+        <div class="item-group">
             <span class="item-name">{{ $item->service->name }}</span>
             <div class="item-detail">
-                <span>{{ $item->qty }} {{ $item->service->unit }} x {{ number_format($item->price_per_unit, 0, ',', '.') }}</span>
+                <span>{{ (float)$item->qty }} {{ $item->service->unit }} x {{ number_format($item->price_per_unit, 0, ',', '.') }}</span>
                 <span>{{ number_format($item->subtotal, 0, ',', '.') }}</span>
             </div>
         </div>
@@ -112,44 +149,51 @@
 
         <div class="divider"></div>
 
-        {{-- TOTAL HARGA --}}
-        <div class="header-info">
-            <div class="d-flex">
-                <span>Subtotal</span>
-                <span>{{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
-            </div>
-            @if($transaction->discount_amount > 0)
-            <div class="d-flex">
-                <span>Diskon ({{ $transaction->promo->code ?? 'Voucher' }})</span>
-                <span>-{{ number_format($transaction->discount_amount, 0, ',', '.') }}</span>
-            </div>
-            @endif
+        <div class="total-row">
+            <span>Subtotal</span>
+            <span>{{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
         </div>
+        
+        @if($transaction->delivery_fee > 0)
+        <div class="total-row">
+            <span>Ongkir</span>
+            <span>{{ number_format($transaction->delivery_fee, 0, ',', '.') }}</span>
+        </div>
+        @endif
 
-        <div class="d-flex fw-bold" style="font-size: 11pt; margin-bottom: 5px; margin-top: 5px;">
-            <span>TOTAL TAGIHAN</span>
+        @if($transaction->discount_amount > 0)
+        <div class="total-row">
+            <span>Diskon</span>
+            <span>-{{ number_format($transaction->discount_amount, 0, ',', '.') }}</span>
+        </div>
+        @endif
+
+        <div class="grand-total">
+            <span>TOTAL</span>
             <span>{{ number_format($transaction->total_price, 0, ',', '.') }}</span>
         </div>
 
-        {{-- STATUS PEMBAYARAN --}}
-        <div class="text-center" style="margin-top: 5px; border: 2px solid #000; padding: 2px;">
-            <strong style="font-size: 12pt;">
-                {{ $transaction->payment_status == 'paid' ? 'LUNAS' : 'BELUM LUNAS' }}
-            </strong>
+        <div class="payment-status">
+            {{ $transaction->payment_status == 'paid' ? '*** LUNAS ***' : '*** BELUM BAYAR ***' }}
         </div>
 
         <div class="divider"></div>
 
-        {{-- FOOTER --}}
         <div class="text-center footer">
-            Terima Kasih!<br>
-            Harap simpan struk ini untuk<br>pengambilan cucian.
-            <br><br>
-            <i>www.laundrykuy.com</i>
+            <strong>Terima Kasih</strong><br>
+            Simpan struk ini sebagai bukti.<br>
+            {{-- <i>Power by {{ $setting->shop_name ?? 'Laundry System' }}</i> --}}
         </div>
         
-        <br>
-        <div class="text-center">.</div> {{-- Dot penutup buat cutter printer --}}
+        {{-- <div style="height: 5mm; text-align: center;">.</div> --}}
+    </div>
+
+</body>
+</html>
+{{-- by {{ $setting->shop_name ?? 'Laundry System' }}</i> --}}
+        </div>
+        
+        {{-- <div style="height: 5mm; text-align: center;">.</div> --}}
     </div>
 
 </body>

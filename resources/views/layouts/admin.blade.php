@@ -342,11 +342,7 @@
                     <a href="{{ auth()->user()->role === 'driver' ? route('driver.profile.index') : route('profile.index') }}" class="d-flex align-items-center gap-3 text-decoration-none hover-scale transition-300">
                         <div class="avatar-ring">
                             <div class="avatar bg-primary text-white rounded-circle box-center overflow-hidden" style="width: 38px; height: 38px;">
-                                @if(auth()->user()->avatar)
-                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-100 h-100 object-fit-cover">
-                                @else
-                                    <span class="fw-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
-                                @endif
+                                {!! auth()->user()->getAvatarHtml('38px', '1rem') !!}
                             </div>
                         </div>
                         <div style="line-height: 1.3;">

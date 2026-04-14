@@ -126,11 +126,7 @@
                         <span class="fw-bold text-dark">{{ Auth::user()->name }}</span>
                     </div>
                     <div class="bg-light-primary text-primary fw-bold rounded-circle box-center border border-2 border-white shadow-sm overflow-hidden" style="width: 42px; height: 42px;">
-                        @if(Auth::user()->avatar)
-                            <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="w-100 h-100 object-fit-cover">
-                        @else
-                            {{ substr(Auth::user()->name, 0, 1) }}
-                        @endif
+                        {!! Auth::user()->getAvatarHtml('42px', '1.1rem') !!}
                     </div>
                 </a>
                 

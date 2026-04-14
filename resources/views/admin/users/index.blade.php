@@ -34,11 +34,7 @@
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="avatar rounded-circle bg-light-primary text-primary fw-bold d-flex align-items-center justify-content-center overflow-hidden" style="width: 40px; height: 40px;">
-                                    @if($u->avatar)
-                                        <img src="{{ asset('storage/' . $u->avatar) }}" class="w-100 h-100 object-fit-cover">
-                                    @else
-                                        {{ substr($u->name, 0, 1) }}
-                                    @endif
+                                    {!! $u->getAvatarHtml('40px', '1rem') !!}
                                 </div>
                                 <div>
                                     <h6 class="fw-bold text-dark mb-0">{{ $u->name }}</h6>

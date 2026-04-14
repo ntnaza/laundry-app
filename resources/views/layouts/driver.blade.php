@@ -66,8 +66,8 @@
                         <span class="fw-bold text-dark d-block">{{ Auth::user()->name }}</span>
                         <small class="text-muted">Kurir</small>
                     </div>
-                    <div class="avatar bg-light-primary text-primary rounded-circle box-center border border-2 border-white shadow-sm" style="width: 40px; height: 40px;">
-                        {{ substr(Auth::user()->name, 0, 1) }}
+                    <div class="avatar bg-light-primary text-primary rounded-circle box-center border border-2 border-white shadow-sm overflow-hidden" style="width: 40px; height: 40px;">
+                        {!! Auth::user()->getAvatarHtml('40px', '1rem') !!}
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg animate__animated animate__fadeIn" aria-labelledby="navbarDropdown">

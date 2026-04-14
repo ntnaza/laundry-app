@@ -53,15 +53,11 @@
                             
                             {{-- Avatar Upload --}}
                             <div class="position-relative d-inline-block mb-3">
-                                <div class="rounded-circle overflow-hidden border border-3 border-white shadow-sm" style="width: 120px; height: 120px;">
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="w-100 h-100 object-fit-cover" id="avatarPreview">
-                                    @else
-                                        <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-1" id="avatarPlaceholder">
-                                            {{ substr(Auth::user()->name, 0, 1) }}
-                                        </div>
-                                        <img src="" class="w-100 h-100 object-fit-cover d-none" id="avatarPreviewImg">
-                                    @endif
+                                <div class="avatar-preview-container rounded-circle overflow-hidden border border-4 border-white shadow-sm position-relative bg-light" style="width: 120px; height: 120px;">
+                                    <div id="avatarPreviewBox" class="w-100 h-100">
+                                        {!! Auth::user()->getAvatarHtml('120px', '3rem') !!}
+                                    </div>
+                                    <img src="" class="w-100 h-100 object-fit-cover d-none" id="avatarPreviewImg">
                                 </div>
                                 <label for="avatarInput" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle box-center shadow-sm cursor-pointer hover-scale" style="width: 35px; height: 35px;">
                                     <i class="bi bi-camera-fill small"></i>
@@ -169,13 +165,10 @@
         if (input.files && input.files[0]) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('avatarPlaceholder')?.classList.add('d-none');
-                var img = document.getElementById('avatarPreview');
-                if(!img) {
-                    img = document.getElementById('avatarPreviewImg');
-                    img.classList.remove('d-none');
-                }
+                document.getElementById('avatarPreviewBox').classList.add('d-none');
+                var img = document.getElementById('avatarPreviewImg');
                 img.src = e.target.result;
+                img.classList.remove('d-none');
             }
             reader.readAsDataURL(input.files[0]);
         }
