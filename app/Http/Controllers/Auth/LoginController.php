@@ -44,19 +44,24 @@ class LoginController extends Controller
     /**
      * Where to redirect users after login.
      *
-     * @var string
+     * @return string
      */
+    public function redirectTo()
+    {
+        $role = trim(auth()->user()->role);
+
+        if ($role == 'admin' || $role == 'staff' || $role == 'owner') {
+            return route('dashboard');
+        } elseif ($role == 'driver') {
+            return route('driver.tasks');
+        }
+
+        return route('customer.dashboard');
+    }
+
     protected function authenticated(Request $request, $user)
 {
-    $role = trim($user->role);
-
-    if ($role == 'admin' || $role == 'staff' || $role == 'owner') {
-        return redirect()->route('dashboard'); // Ke Admin Panel
-    } elseif ($role == 'driver') {
-        return redirect()->route('driver.tasks'); // Ke Area Kurir
-    } else {
-        return redirect()->route('customer.dashboard'); // Ke Area Pelanggan
-    }
+    return redirect($this->redirectTo());
 }
 
     /**

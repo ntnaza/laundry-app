@@ -46,9 +46,17 @@ class RegisterController extends Controller
      */
     public function redirectTo()
     {
+        $user = auth()->user();
+        $role = trim($user->role);
+
         // Kalau yang daftar itu Boss/Karyawan -> Ke Admin Panel
-        if (auth()->user()->role == 'admin' || auth()->user()->role == 'staff' || auth()->user()->role == 'owner') {
+        if ($role == 'admin' || $role == 'staff' || $role == 'owner') {
             return route('dashboard');
+        }
+        
+        // Kalau Driver -> Ke Area Kurir
+        if ($role == 'driver') {
+            return route('driver.tasks');
         }
         
         // Kalau Customer -> Ke Halaman Pelanggan

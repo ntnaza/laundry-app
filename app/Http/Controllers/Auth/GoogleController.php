@@ -58,8 +58,13 @@ class GoogleController extends Controller
             }
 
             // Redirect sesuai role (Sama seperti RegisterController)
-            if (Auth::user()->role == 'admin' || Auth::user()->role == 'staff' || Auth::user()->role == 'owner') {
+            $user = Auth::user();
+            $role = trim($user->role);
+
+            if ($role == 'admin' || $role == 'staff' || $role == 'owner') {
                 return redirect()->route('dashboard');
+            } elseif ($role == 'driver') {
+                return redirect()->route('driver.tasks');
             }
 
             return redirect()->route('customer.dashboard');
