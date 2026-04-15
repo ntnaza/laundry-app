@@ -14,8 +14,8 @@
             <h3 class="fw-heading mb-0">Hai, {{ strtok(Auth::user()->name, " ") }}! 👋</h3>
             <p class="text-muted small mb-0">Pakaian bersih menantimu.</p>
         </div>
-        <div class="bg-white text-primary fw-bold rounded-circle box-center shadow-sm" style="width: 45px; height: 45px; border: 2px solid #f1f5f9;">
-            {{ substr(Auth::user()->name, 0, 1) }}
+        <div class="bg-white text-primary fw-bold rounded-circle box-center shadow-sm overflow-hidden" style="width: 45px; height: 45px; border: 2px solid #f1f5f9;">
+            {!! Auth::user()->getAvatarHtml('45px', '1.2rem') !!}
         </div>
     </div>
 </div>

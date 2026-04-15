@@ -506,15 +506,9 @@
                             @endfor
                         </div>
                         <p class="text-muted small mb-4">"{{ $review->content }}"</p>
-                        <div class="d-flex-center gap-3">
-                            <div class="rounded-circle overflow-hidden box-center border border-light shadow-sm" style="width: 45px; height: 45px;">
-                                @if($review->user->avatar)
-                                    <img src="{{ asset('storage/' . $review->user->avatar) }}" class="w-100 h-100 object-fit-cover" alt="{{ $review->user->name }}">
-                                @else
-                                    <div class="w-100 h-100 bg-primary text-white d-flex align-items-center justify-content-center fw-bold">
-                                        {{ substr($review->user->name, 0, 1) }}
-                                    </div>
-                                @endif
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle overflow-hidden border border-light shadow-sm" style="width: 45px; height: 45px;">
+                                {!! $review->user->getAvatarHtml('45px', '1.2rem') !!}
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-0 text-dark">{{ $review->user->name }}</h6>

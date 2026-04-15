@@ -320,13 +320,7 @@
                             </div>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle overflow-hidden border border-2 border-white" style="width: 45px; height: 45px;">
-                                    @if($testimonial->user->avatar)
-                                        <img src="{{ asset('storage/' . $testimonial->user->avatar) }}" class="w-100 h-100 object-fit-cover" alt="User">
-                                    @else
-                                        <div class="w-100 h-100 bg-white text-primary d-flex align-items-center justify-content-center fw-bold fs-5">
-                                            {{ substr($testimonial->user->name, 0, 1) }}
-                                        </div>
-                                    @endif
+                                    {!! $testimonial->user->getAvatarHtml('45px', '1.2rem') !!}
                                 </div>
                                 <div>
                                     <h6 class="text-white mb-0 fw-bold">{{ $testimonial->user->name }}</h6>
